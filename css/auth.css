@@ -1,0 +1,447 @@
+/**
+ * 足迹地图 - 认证页面样式
+ * 登录和注册页面的特定样式
+ */
+
+/* ---------- 认证页面布局 ---------- */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, var(--bg-gray) 0%, var(--bg-light) 100%);
+}
+
+.dark .auth-container {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 450px;
+  background-color: var(--bg-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-header {
+  padding: 2rem 2rem 1rem;
+  text-align: center;
+}
+
+.auth-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.auth-body {
+  padding: 1rem 2rem 2rem;
+}
+
+.auth-footer {
+  padding: 1.5rem 2rem;
+  background-color: var(--bg-gray);
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark .auth-footer {
+  background-color: var(--bg-dark);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.auth-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-logo-icon {
+  width: 48px;
+  height: 48px;
+  background-color: var(--primary-color);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+}
+
+.auth-logo-icon svg {
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.auth-logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* ---------- 表单样式增强 ---------- */
+.auth-form .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.auth-form .form-control {
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-light);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.dark .auth-form .form-control {
+  background-color: var(--bg-dark);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+.auth-form .form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(93, 92, 222, 0.25);
+}
+
+.auth-form .btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.form-text {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  color: var(--text-tertiary);
+}
+
+/* 密码输入框组 */
+.password-input-group {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  z-index: 2;
+}
+
+.password-toggle:hover {
+  color: var(--text-secondary);
+}
+
+/* 记住我和忘记密码 */
+.auth-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+}
+
+.remember-me input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.forgot-password {
+  color: var(--primary-color);
+  font-size: 0.875rem;
+  transition: color var(--transition-fast);
+}
+
+.forgot-password:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* ---------- 社交登录 ---------- */
+.social-login {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.social-login-text {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.social-login-text::before,
+.social-login-text::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.dark .social-login-text::before,
+.dark .social-login-text::after {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.social-login-text span {
+  padding: 0 1rem;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+}
+
+.social-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.social-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-gray);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.dark .social-button {
+  background-color: var(--bg-dark);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.social-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.social-button:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.social-button.google svg {
+  color: #DB4437;
+}
+
+.social-button.facebook svg {
+  color: #3b5998;
+}
+
+.social-button.twitter svg {
+  color: #1DA1F2;
+}
+
+.social-button.github svg {
+  color: #333;
+}
+
+.dark .social-button.github svg {
+  color: #fff;
+}
+
+/* ---------- 切换表单 ---------- */
+.auth-toggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.auth-toggle span {
+  margin-right: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.auth-toggle a {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.auth-toggle a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 表单验证样式 ---------- */
+.form-control.is-invalid {
+  border-color: var(--danger);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23dc3545' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+  padding-right: calc(1.5em + 0.75rem);
+}
+
+.form-control.is-valid {
+  border-color: var(--success);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2328a745' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+  padding-right: calc(1.5em + 0.75rem);
+}
+
+.invalid-feedback {
+  display: none;
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: var(--danger);
+}
+
+.is-invalid ~ .invalid-feedback {
+  display: block;
+}
+
+.valid-feedback {
+  display: none;
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: var(--success);
+}
+
+.is-valid ~ .valid-feedback {
+  display: block;
+}
+
+/* ---------- 动画效果 ---------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.auth-card {
+  animation: fadeInUp 0.6s ease;
+}
+
+/* ---------- 响应式设计 ---------- */
+@media (max-width: 576px) {
+  .auth-card {
+    box-shadow: none;
+    border-radius: 0;
+  }
+  
+  .auth-container {
+    padding: 1rem 0;
+  }
+  
+  .auth-header, 
+  .auth-body {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  .auth-footer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  .auth-logo-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .auth-logo-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .auth-logo-text {
+    font-size: 1.25rem;
+  }
+}
+
+/* 选项卡样式 */
+.auth-tab {
+    background-color: var(--bg-light);
+    color: var(--text-secondary);
+    border-color: rgba(0, 0, 0, 0.15);
+    transition: all var(--transition-fast);
+}
+
+.dark .auth-tab {
+    background-color: var(--bg-dark);
+    color: var(--text-secondary);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.auth-tab.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* 社交按钮颜色覆盖 */
+.social-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+.social-button.google svg {
+    color: #DB4437;
+}
+
+.social-button.facebook svg {
+    color: #3b5998;
+}
+
+.social-button.github svg {
+    color: #333;
+}
+
+.dark .social-button.github svg {
+    color: #fff;
+}
+
+/* 表单输入验证样式 */
+.form-control.is-invalid {
+    border-color: var(--danger);
+}
+
+.form-control.is-valid {
+    border-color: var(--success);
+}
+
+.invalid-feedback {
+    display: none;
+    font-size: 0.875rem;
+    color: var(--danger);
+    margin-top: 0.25rem;
+}
+
+.is-invalid ~ .invalid-feedback {
+    display: block;
+}

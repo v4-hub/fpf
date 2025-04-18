@@ -1,0 +1,169 @@
+{
+  "5": {
+    "id": 5,
+    "title": "饶宗颐先生生平足迹",
+    "description": "记录了饶宗颐先生的重要人生历程和学术足迹",
+    "username": "赵刚",
+    "created_at": "2023-06-15",
+    "updated_at": "2023-06-15",
+    "visibility": "public",
+    "view_count": 560,
+    "points": [
+      {
+        "id": 1,
+        "journey_id": 5,
+        "time": "1917年8月9日",
+        "exact_date": "1917/8/9",
+        "location": "广东潮州",
+        "latitude": 23.6567,
+        "longitude": 116.6226,
+        "content": "饶宗颐出生于广东潮安县。",
+        "order_index": 1
+      },
+      {
+        "id": 2,
+        "journey_id": 5,
+        "time": "1938年10月",
+        "exact_date": "1938/10/15",
+        "location": "广东广州",
+        "latitude": 23.1291,
+        "longitude": 113.2644,
+        "content": "逼于社会动荡形势，中山大学决定迁校于云南澂江。年尾，先生开始染上疟疾，可是当时并无感觉。",
+        "order_index": 2
+      },
+      {
+        "id": 3,
+        "journey_id": 5,
+        "time": "1938年10月",
+        "exact_date": "1938/10/20",
+        "location": "广东潮州",
+        "latitude": 23.6567,
+        "longitude": 116.6226,
+        "content": "广州沦陷，广东通志馆关闭，中山大学前往云南澄江。潮汕地区未落入敌寇之手，返回潮州，到凤凰山对畲族进行调查研究。",
+        "order_index": 3
+      },
+      {
+        "id": 4,
+        "journey_id": 5,
+        "time": "1939年2月",
+        "exact_date": "1939/2/15",
+        "location": "广东梅州",
+        "latitude": 24.2886,
+        "longitude": 116.1176,
+        "content": "以广东通志馆纂修资格，经詹安泰推荐，受聘为中山大学研究员。",
+        "order_index": 4
+      },
+      {
+        "id": 5,
+        "journey_id": 5,
+        "time": "1941年",
+        "exact_date": "1941/7/1",
+        "location": "廣西桂林",
+        "latitude": 25.279,
+        "longitude": 110.2882,
+        "content": "抗戰軍興，先生自此流徙西南、西北各地。",
+        "order_index": 5
+      },
+      {
+        "id": 6,
+        "journey_id": 5,
+        "time": "1943年秋",
+        "exact_date": "1943/9/1",
+        "location": "貴州遵義",
+        "latitude": 27.7139,
+        "longitude": 106.9298,
+        "content": "抵達遵義浙江大學，講授甲骨文。",
+        "order_index": 6
+      },
+      {
+        "id": 7,
+        "journey_id": 5,
+        "time": "1946年7月",
+        "exact_date": "1946/7/1",
+        "location": "廣東廣州",
+        "latitude": 23.1291,
+        "longitude": 113.2644,
+        "content": "抗戰勝利後，先生返廣州。任教於廣東省立文理學院、廣東大學。",
+        "order_index": 7
+      },
+      {
+        "id": 8,
+        "journey_id": 5,
+        "time": "1949年",
+        "exact_date": "1949/10/1",
+        "location": "香港",
+        "latitude": 22.3193,
+        "longitude": 114.1694,
+        "content": "移居香港，任教於新亞書院（今香港中文大學前身）。",
+        "order_index": 8
+      }
+    ]
+  },
+  "3": {
+    "id": 3,
+    "title": "李华的环球旅行",
+    "description": "五年内走过30个国家的足迹记录",
+    "username": "李华",
+    "created_at": "2023-05-10",
+    "updated_at": "2023-05-10",
+    "visibility": "public",
+    "view_count": 324,
+    "points": [
+      {
+        "id": 1,
+        "journey_id": 3,
+        "time": "2015年1月",
+        "exact_date": "2015/1/15",
+        "location": "北京",
+        "latitude": 39.9042,
+        "longitude": 116.4074,
+        "content": "从北京出发，开始环球之旅。",
+        "order_index": 1
+      },
+      {
+        "id": 2,
+        "journey_id": 3,
+        "time": "2015年2月",
+        "exact_date": "2015/2/10",
+        "location": "东京",
+        "latitude": 35.6762,
+        "longitude": 139.6503,
+        "content": "游览东京，体验日本文化。",
+        "order_index": 2
+      },
+      {
+        "id": 3,
+        "journey_id": 3,
+        "time": "2015年3月",
+        "exact_date": "2015/3/5",
+        "location": "首尔",
+        "latitude": 37.5665,
+        "longitude": 126.978,
+        "content": "参观首尔古宫，品尝韩国美食。",
+        "order_index": 3
+      },
+      {
+        "id": 4,
+        "journey_id": 3,
+        "time": "2015年4月",
+        "exact_date": "2015/4/15",
+        "location": "曼谷",
+        "latitude": 13.7563,
+        "longitude": 100.5018,
+        "content": "体验泰国水上市场和寺庙文化。",
+        "order_index": 4
+      },
+      {
+        "id": 5,
+        "journey_id": 3,
+        "time": "2015年5月",
+        "exact_date": "2015/5/20",
+        "location": "新德里",
+        "latitude": 28.6139,
+        "longitude": 77.209,
+        "content": "参观泰姬陵，了解印度文化。",
+        "order_index": 5
+      }
+    ]
+  }
+}

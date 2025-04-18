@@ -1,0 +1,729 @@
+/**
+ * 足迹地图 - 用户控制中心样式表
+ */
+ 
+:root {
+  --primary-color: #4f46e5; /* 靛蓝色作为主色调 */
+  --primary-light: #6366f1;
+  --primary-dark: #4338ca;
+  --secondary-color: #10b981; /* 绿色作为辅助色 */
+  --secondary-light: #34d399;
+  --secondary-dark: #059669;
+  --accent-color: #8b5cf6; /* 紫色作为强调色 */
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
+  --light-bg: #ffffff;
+  --dark-bg: #111827;
+  --light-card-bg: #ffffff;
+  --dark-card-bg: #1f2937;
+  --light-text: #111827;
+  --dark-text: #f9fafb;
+  --light-text-secondary: #6b7280;
+  --dark-text-secondary: #9ca3af;
+  --light-border: #e5e7eb;
+  --dark-border: #374151;
+  --light-hover: #f3f4f6;
+  --dark-hover: #374151;
+  --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --transition: all 0.3s ease;
+}
+
+
+/* ---------- 全局布局 ---------- */
+.dashboard-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- 导航样式 ---------- */
+.nav-link {
+    @apply border-transparent text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium;
+}
+
+.nav-link.active {
+    @apply border-indigo-600 text-indigo-600 dark:text-indigo-400;
+}
+
+.mobile-nav-link {
+    @apply block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400;
+}
+
+.mobile-nav-link.active {
+    @apply border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900 dark:bg-opacity-20;
+}
+
+.mobile-menu-button {
+    @apply p-2 rounded-full text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none;
+}
+
+/* ---------- 用户头像与菜单 ---------- */
+.user-avatar {
+    @apply flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+}
+
+.user-initial {
+    @apply text-lg font-bold;
+}
+
+.user-dropdown {
+    @apply origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10;
+}
+
+.dropdown-item {
+    @apply px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center;
+}
+
+.dropdown-item svg {
+    @apply mr-3 text-gray-500 dark:text-gray-400;
+}
+
+.notification-badge {
+    @apply absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full;
+}
+
+/* ---------- 新建地图按钮 ---------- */
+.btn-create-journey {
+    @apply inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+}
+
+/* ---------- 面板容器 ---------- */
+.dashboard-panel {
+    display: none;
+}
+
+.dashboard-panel.active {
+    display: block;
+}
+
+/* ---------- 统计卡片 (修改为卡片式布局) ---------- */
+
+/* ---------- 统计卡片 ---------- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background-color: var(--light-card-bg);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition);
+  box-shadow: var(--box-shadow);
+  border: 1px solid var(--light-border);
+}
+
+.dark .stat-card {
+  background-color: var(--dark-card-bg);
+  border-color: var(--dark-border);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.stat-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.stat-icon.blue {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.stat-icon.green {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.stat-icon.purple {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.stat-icon.orange {
+  background-color: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+}
+
+.stat-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.stat-title {
+  font-size: 0.875rem;
+  color: var(--light-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dark .stat-title {
+  color: var(--dark-text-secondary);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--light-text);
+  margin-top: 0.25rem;
+}
+
+.dark .stat-value {
+  color: var(--dark-text);
+}
+
+/* ---------- 快速操作卡片 (修改为卡片式布局) ---------- */
+
+/* ---------- 快速操作卡片 ---------- */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.quick-action-card {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background: white; /* 设置背景为白色 */
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+.quick-action-card:hover {
+  transform: translateY(-5px);
+}
+
+.quick-action-card.blue {
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+}
+
+.quick-action-card.green {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.quick-action-card.purple {
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+}
+
+.quick-action-card.orange {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+}
+
+.quick-action-icon {
+  width: 4rem;
+  height: 4rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.quick-action-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.quick-action-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.quick-action-desc {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* ---------- 足迹卡片 ---------- */
+.journey-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-200;
+}
+
+.journey-card:hover {
+    transform: translateY(-5px);
+}
+
+.journey-card-media {
+    @apply h-48 bg-gray-100 dark:bg-gray-700 relative;
+}
+
+.journey-card-media img {
+    @apply w-full h-full object-cover;
+}
+
+.journey-card-content {
+    @apply p-5;
+}
+
+.journey-card-title {
+    @apply text-lg font-bold text-gray-900 dark:text-white mb-2;
+}
+
+.journey-card-desc {
+    @apply text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2;
+}
+
+.journey-card-meta {
+    @apply flex justify-between items-center text-xs text-gray-500 dark:text-gray-400;
+}
+
+.journey-card-actions {
+    @apply flex border-t border-gray-100 dark:border-gray-700;
+}
+
+.journey-card-btn-view, .journey-card-btn-edit {
+    @apply flex-1 py-3 text-center text-sm font-medium transition-colors duration-200;
+}
+
+.journey-card-btn-view {
+    @apply text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900 dark:hover:bg-opacity-20;
+}
+
+.journey-card-btn-edit {
+    @apply text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-l border-gray-100 dark:border-gray-700;
+}
+
+/* ---------- 足迹列表项 ---------- */
+.journey-item {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow p-5 flex flex-col sm:flex-row justify-between gap-4;
+}
+
+.journey-item-content {
+    @apply flex-1;
+}
+
+.journey-item-header {
+    @apply flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2;
+}
+
+.journey-item-title {
+    @apply text-xl font-bold text-gray-900 dark:text-white;
+}
+
+.journey-item-visibility {
+    @apply flex items-center text-sm font-medium gap-1;
+}
+
+.journey-item-desc {
+    @apply text-gray-600 dark:text-gray-300 mb-4 line-clamp-2;
+}
+
+.journey-item-meta {
+    @apply flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400;
+}
+
+.journey-item-stat {
+    @apply flex items-center gap-1;
+}
+
+.journey-item-actions {
+    @apply flex items-center gap-2;
+}
+
+.journey-item-btn {
+    @apply p-2 rounded-full text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200;
+}
+
+/* ---------- 共享足迹卡片 ---------- */
+.shared-journey-card {
+    @apply rounded-lg overflow-hidden shadow-md transition-transform duration-200;
+}
+
+.shared-journey-card:hover {
+    transform: translateY(-5px);
+}
+
+.shared-journey-card-media {
+    @apply h-48 relative;
+}
+
+.shared-journey-card-media img {
+    @apply w-full h-full object-cover;
+}
+
+.shared-journey-card-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4;
+}
+
+.shared-journey-card-title {
+    @apply text-white font-bold text-lg;
+}
+
+.shared-journey-card-author {
+    @apply text-white/80 text-sm;
+}
+
+.shared-journey-card-content {
+    @apply bg-white dark:bg-gray-800 p-4;
+}
+
+.shared-journey-card-desc {
+    @apply text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2;
+}
+
+.shared-journey-card-meta {
+    @apply flex justify-between items-center;
+}
+
+.shared-journey-card-views {
+    @apply flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400;
+}
+
+.shared-journey-card-btn {
+    @apply text-sm text-indigo-600 dark:text-indigo-400 font-medium flex items-center hover:underline;
+}
+
+/* ---------- 搜索和筛选 ---------- */
+.search-input {
+    @apply block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm;
+}
+
+.search-icon {
+    @apply absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400;
+}
+
+.filter-select {
+    @apply block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm;
+}
+
+/* ---------- 分页 ---------- */
+.pagination-btn {
+    @apply inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
+}
+
+.pagination-btn.disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-white dark:hover:bg-gray-800;
+}
+
+/* ---------- 表单样式 ---------- */
+.form-control {
+    @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
+}
+
+.form-range {
+    @apply w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer;
+}
+
+.btn-primary {
+    @apply inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+}
+
+.btn-danger {
+    @apply inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
+}
+
+.btn-cancel {
+    @apply inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+}
+
+.btn-upload-avatar {
+    @apply relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
+}
+
+.profile-avatar-preview {
+    @apply w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white;
+}
+
+.profile-avatar-initial {
+    @apply text-2xl font-bold;
+}
+
+/* ---------- 设置选项卡 ---------- */
+/* ---------- 设置选项卡 ---------- */
+.settings-tab {
+    @apply py-2 px-4 text-sm font-medium rounded-md /* 基本形状和内边距 */
+           bg-white border border-gray-300 shadow-sm /* 白色背景、边框、阴影 */
+           text-gray-700 /* 默认文字颜色 */
+           transition-colors duration-150 ease-in-out /* 过渡效果 */
+           hover:bg-gray-50 hover:border-gray-400 /* 悬停效果 */
+           dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 /* 暗黑模式 */
+           dark:hover:bg-gray-700 dark:hover:border-gray-500; /* 暗黑模式悬停 */
+}
+
+.settings-tab.active {
+    @apply border-indigo-600 text-indigo-600 font-semibold /* Active状态：强调边框和文字颜色，加粗 */
+           dark:border-indigo-500 dark:text-indigo-400; /* 暗黑模式 Active 状态 */
+           /* 注意：这里保持了白色背景，如果需要，也可以改变背景色 */
+           /* 例如：@apply bg-indigo-50 text-indigo-700 border-indigo-600 font-semibold; */
+}
+
+/* 内容区域样式保持不变 */
+.settings-tab-content {
+    display: none;
+}
+
+.settings-tab-content.active {
+    display: block;
+}
+
+/* ---------- 开关样式 ---------- */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.slider.round {
+    border-radius: 24px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.theme-toggle {
+    @apply inline-flex items-center;
+}
+
+.notification-setting {
+    @apply flex justify-between items-center bg-gray-50 dark:bg-gray-900 rounded-md p-4;
+}
+
+.notification-toggle {
+    @apply flex items-center;
+}
+
+/* ---------- 模态框 ---------- */
+.modal {
+    @apply fixed inset-0 z-50 overflow-y-auto;
+}
+
+.modal-backdrop {
+    @apply fixed inset-0 bg-black opacity-50;
+}
+
+.modal-container {
+    @apply flex items-center justify-center min-h-screen p-4 text-center;
+}
+
+.modal-content {
+    @apply inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full;
+}
+
+.modal-header {
+    @apply px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-between items-center;
+}
+
+.modal-title {
+    @apply text-lg font-medium text-gray-900 dark:text-white;
+}
+
+.modal-close {
+    @apply text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none;
+}
+
+.modal-body {
+    @apply px-6 py-4;
+}
+
+.modal-footer {
+    @apply px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-end gap-3;
+}
+
+/* ---------- 加载更多按钮 ---------- */
+.btn-load-more {
+    @apply inline-flex items-center px-4 py-2 border border-indigo-600 dark:border-indigo-400 rounded-md shadow-sm text-base font-medium text-indigo-600 dark:text-indigo-400 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+}
+
+/* ---------- 通知 ---------- */
+.notification {
+    @apply px-4 py-3 rounded-lg shadow-lg max-w-xs transform transition-all duration-300;
+}
+
+.notification.show {
+    @apply translate-x-0;
+}
+
+.notification-info {
+    @apply bg-indigo-600 text-white;
+}
+
+.notification-success {
+    @apply bg-green-600 text-white;
+}
+
+.notification-error {
+    @apply bg-red-600 text-white;
+}
+
+.notification-warning {
+    @apply bg-yellow-600 text-white;
+}
+
+/* ---------- 响应式设计 ---------- */
+@media (max-width: 640px) {
+    .journey-item-header {
+        @apply flex-col items-start;
+    }
+    
+    .journey-item-actions {
+        @apply border-t border-gray-200 dark:border-gray-700 pt-3 mt-3 justify-center;
+    }
+}
+
+/* Add this to dashboard.css or main.css */
+.loader-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.7); /* Light overlay */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: इन्हेरिट; /* Inherit border-radius from parent if needed */
+}
+
+.dark .loader-overlay {
+  background-color: rgba(31, 41, 55, 0.7); /* Dark overlay (using gray-800 equivalent) */
+}
+
+/* Small adjustments for journey item layout if needed */
+.journey-item {
+  /* ... existing styles ... */
+  position: relative; /* Needed for loader overlay positioning */
+}
+
+.journey-list-container { /* Or #journeyList if you prefer ID */
+   min-height: 200px; /* Give it some min-height so loader is visible */
+   position: relative;
+}
+
+/* Styling for button loading state */
+button .loader-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+  display: inline-block;
+  vertical-align: middle;
+  /* Ensure loader color contrasts with button background */
+  border-color: rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+}
+button.btn-danger .loader-sm { /* Adjust if loader color needs change on danger button */
+   border-top-color: white;
+}
+
+/* Simple card style for recent journeys */
+.journey-card-simple {
+    background-color: white;
+    border-radius: 0.5rem; /* rounded-lg */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+}
+.dark .journey-card-simple {
+    background-color: #374151; /* gray-700 */
+}
+.journey-card-simple:hover {
+     transform: translateY(-4px);
+}
+.journey-card-simple .journey-card-media {
+    height: 8rem; /* h-32 */
+    background-color: #D1D5DB; /* gray-300 */
+}
+.dark .journey-card-simple .journey-card-media {
+    background-color: #4B5563; /* gray-600 */
+}
+.journey-card-simple .journey-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.journey-card-simple .journey-card-content {
+    padding: 1rem; /* p-4 */
+}
+.journey-card-simple .journey-card-title {
+    font-weight: 600; /* font-semibold */
+    font-size: 1rem; /* text-base */
+    color: #111827; /* gray-900 */
+    margin-bottom: 0.25rem; /* mb-1 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dark .journey-card-simple .journey-card-title {
+     color: white;
+}
+.journey-card-simple .journey-card-meta {
+    font-size: 0.75rem; /* text-xs */
+    color: #6B7280; /* gray-500 */
+}
+.dark .journey-card-simple .journey-card-meta {
+     color: #9CA3AF; /* gray-400 */
+}
+.journey-card-simple .journey-card-actions-simple {
+     padding: 0 1rem 1rem 1rem; /* px-4 pb-4 */
+     text-align: right;
+}
+
+/* 定义变量 */
+:root {
+  --primary-color: #5c92de;
+}
