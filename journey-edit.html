@@ -1,0 +1,329 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑足迹 - 足迹地图</title>
+    
+    <!-- 网站图标 -->
+    <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- 自定义CSS -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/journey-edit.css">
+    
+    <!-- ArcGIS JS API CSS -->
+    <link rel="stylesheet" id="esri-theme-css" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
+</head>
+
+<body class="light-theme">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm fixed top-0 w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <!-- Logo -->
+                    <a href="index.html" class="flex-shrink-0 flex items-center">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                            </svg>
+                        </div>
+                        <span class="ml-3 text-xl font-bold text-indigo-600 dark:text-indigo-400">足迹地图</span>
+                    </a>
+                </div>
+                
+                <div class="flex items-center">
+                    <!-- 深色模式切换 -->
+                    <button id="darkModeToggle" class="p-2 rounded-full text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">
+                        <!-- 太阳图标 (亮模式) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <!-- 月亮图标 (暗模式) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- 控制台按钮 -->
+                    <div id="dashboardLink" class="ml-4 hidden">
+                        <a href="dashboard.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                            </svg>
+                            控制台
+                        </a>
+                    </div>
+                    
+                    <!-- 登录按钮 -->
+                    <div id="loginLink" class="ml-4">
+                        <a href="auth.html?mode=login" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                            </svg>
+                            登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 左侧编辑面板 -->
+        <div id="editPanel">
+            <div class="edit-panel-header">
+                <h2>编辑足迹</h2>
+                <button id="toggleEditPanel" class="toggle-panel-btn" title="收起/展开编辑面板">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="edit-panel-content">
+                <!-- 基本信息编辑区域 -->
+                <div class="edit-section">
+                    <h3>基本信息</h3>
+                    <div class="form-group">
+                        <label for="journeyTitle">足迹标题</label>
+                        <input type="text" id="journeyTitle" placeholder="输入足迹标题">
+                    </div>
+                    <div class="form-group">
+                        <label for="journeyDescription">足迹描述</label>
+                        <textarea id="journeyDescription" placeholder="输入足迹描述" rows="3"></textarea>
+                    </div>
+                </div>
+                
+                <!-- 足迹点列表和编辑区域 -->
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3>足迹点</h3>
+                        <button id="addPointBtn" class="action-btn" title="添加新足迹点">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            添加足迹点
+                        </button>
+                    </div>
+                    
+                    <div id="pointsList" class="points-list">
+                        <!-- 列表项由JS动态添加 -->
+                        <div class="empty-list-placeholder">暂无足迹点，请点击"添加足迹点"按钮</div>
+                    </div>
+                </div>
+                
+                <!-- 操作按钮区域 -->
+                <div class="edit-actions">
+                    <button id="saveJourneyBtn" class="primary-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        保存足迹
+                    </button>
+                    <button id="cancelEditBtn" class="secondary-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        取消编辑
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 地图容器 -->
+        <div id="viewDiv"></div>
+        
+        <!-- 加载状态指示器 -->
+        <div id="loadingIndicator">正在加载...</div>
+        
+        <!-- 地图工具栏 -->
+        <div id="mapTools">
+            <button id="modeToggleBtn" title="切换2D/3D视图">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd"></path>
+                </svg>
+                
+            </button>
+            <button id="addLocationBtn" title="在地图上添加位置" class="active-tool">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                </svg>
+                
+            </button>
+            <button id="selectLocationBtn" title="选择和编辑位置">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M6.672 1.911a1 1 0 10-1.932.518l.259.966a1 1 0 001.932-.518l-.26-.966zM2.429 4.74a1 1 0 10-.517 1.932l.966.259a1 1 0 00.517-1.932l-.966-.26zm8.814-.569a1 1 0 00-1.415-1.414l-.707.707a1 1 0 101.415 1.415l.707-.708zm-7.071 7.072l.707-.707A1 1 0 003.465 9.12l-.708.707a1 1 0 001.415 1.415zm3.2-5.171a1 1 0 00-1.3 1.3l4 10a1 1 0 001.823.075l1.38-2.759 3.018 3.02a1 1 0 001.414-1.415l-3.019-3.02 2.76-1.379a1 1 0 00-.076-1.822l-10-4z" clip-rule="evenodd"></path>
+                </svg>
+                
+            </button>
+            <button id="resetViewBtn" title="重置地图视图">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                </svg>
+                
+            </button>
+        </div>
+
+    </div>
+    
+    <!-- 添加/编辑足迹点对话框 -->
+    <div id="pointEditDialog" class="dialog-overlay hidden">
+        <div class="dialog-container">
+            <div class="dialog-header">
+                <h3 id="dialogTitle">添加足迹点</h3>
+                <button id="closeDialogBtn" class="close-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="dialog-content">
+                <div class="form-group">
+                    <label for="pointName">地点名称</label>
+                    <input type="text" id="pointName" placeholder="输入地点名称">
+                </div>
+                <div class="form-group">
+                    <label for="pointTime">时间</label>
+                    <input type="text" id="pointTime" placeholder="例如：1917年8月9日">
+                </div>
+                <div class="form-group">
+                    <label for="pointDate">精确日期</label>
+                    <input type="text" id="pointDate" placeholder="格式：YYYY/MM/DD">
+                </div>
+                <div class="form-group">
+                    <label for="pointContent">事件内容</label>
+                    <textarea id="pointContent" placeholder="输入在此地点发生的事件描述" rows="4"></textarea>
+                </div>
+                <div class="form-group coordinates-group">
+                    <div>
+                        <label for="pointLatitude">纬度</label>
+                        <input type="number" id="pointLatitude" step="0.0001" placeholder="纬度">
+                    </div>
+                    <div>
+                        <label for="pointLongitude">经度</label>
+                        <input type="number" id="pointLongitude" step="0.0001" placeholder="经度">
+                    </div>
+                </div>
+                <p class="coordinate-help">提示：可以在地图上直接点击来设置坐标</p>
+            </div>
+            <div class="dialog-actions">
+                <button id="deletePointBtn" class="danger-btn hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    删除
+                </button>
+                <button id="mapPickLocationBtn" class="secondary-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                    </svg>
+                    在地图上选择
+                </button>
+                <button id="savePointBtn" class="primary-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    保存
+                </button>
+                <button id="cancelDialogBtn" class="secondary-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 未授权提示对话框 -->
+    <div id="unauthorizedDialog" class="dialog-overlay hidden">
+        <div class="dialog-container">
+            <div class="dialog-header">
+                <h3>需要登录</h3>
+                <button class="close-btn close-unauthorized-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="dialog-content">
+                <div class="unauthorized-message">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <p>您需要登录才能编辑足迹。</p>
+                    <p>如果这是您的足迹，请登录后再进行编辑。</p>
+                </div>
+            </div>
+            <div class="dialog-actions justify-center">
+                <a href="auth.html?mode=login" class="primary-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    前往登录
+                </a>
+                <button class="secondary-btn close-unauthorized-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    返回
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div id="confirmDialog" class="dialog-overlay hidden">
+        <div class="dialog-container">
+            <div class="dialog-header">
+                <h3 id="confirmTitle">确认操作</h3>
+                <button class="close-btn close-confirm-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="dialog-content">
+                <p id="confirmMessage">您确定要执行此操作吗？</p>
+            </div>
+            <div class="dialog-actions">
+                <button id="confirmYesBtn" class="primary-btn">确定</button>
+                <button id="confirmNoBtn" class="secondary-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center justify-between sm:flex-row">
+                <div class="flex items-center">
+                    <span class="text-sm text-gray-500 dark:text-gray-400">© 2023 足迹地图. 保留所有权利.</span>
+                </div>
+                <div class="mt-4 sm:mt-0">
+                    <nav class="flex space-x-4">
+                        <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                            条款
+                        </a>
+                        <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                            隐私
+                        </a>
+                        <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                            帮助
+                        </a>
+                        <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                            联系我们
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ArcGIS JS API 库 -->
+    <script src="https://js.arcgis.com/4.29/"></script>
+    
+    <!-- 自定义JS -->
+    <script src="assets/js/journey-edit.js"></script>
+
+
+</body></html>
