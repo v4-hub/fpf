@@ -1,543 +1,304 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>足迹地图 - 记录生活的每一步</title>
-    
-    <!-- 网站图标 -->
+    <title>Global Perspective | 足迹地图</title>
     <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
-    
-    <!-- Tailwind CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
-    <!-- AOS CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
-    
-    <!-- 自定义CSS -->
-    <link rel="stylesheet" href="css/main.css">
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="//unpkg.com/globe.gl"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        /* 核心自定义样式 */
-        :root {
-            --primary-color: #5D5CDE;
-            --primary-dark: #4848b0;
-            --primary-light: #8584ff;
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #050505;
+            color: #fff;
+            overflow-x: hidden;
         }
-        
-        .hero-section {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e6f1 100%);
-            min-height: 80vh;
+
+        .glass-nav {
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
-        
-        .dark .hero-section {
-            background: linear-gradient(135deg, #232354 0%, #353582 100%);
+
+        .text-gradient {
+            background: linear-gradient(to right, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
+
+        .btn-glow {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
             transition: all 0.3s ease;
         }
-        
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
+
+        .btn-glow:hover {
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.7);
             transform: translateY(-2px);
         }
-        
-        .map-card {
-            transition: all 0.3s ease;
+
+        .glass-card {
+            background: rgba(25, 25, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        
-        .map-card:hover {
-            transform: translateY(-5px);
+
+        .glass-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(99, 102, 241, 0.3);
         }
-        
-        .feature-icon {
-            background-color: rgba(93, 92, 222, 0.1);
-            color: var(--primary-color);
+
+        #globeViz {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            opacity: 0.8;
+            pointer-events: auto;
         }
-        
-        .animate-float {
-            animation: float 3s ease-in-out infinite;
+
+        .fade-in {
+            animation: fadeIn 1.5s ease forwards;
+            opacity: 0;
         }
-        
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+
+        .delay-1 {
+            animation-delay: 0.2s;
         }
-        
-        /* 咖啡杯按钮 */
-        .coffee-btn {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background-color: white;
-            color: var(--primary-color);
-            border-radius: 50%;
-            width: 3.5rem;
-            height: 3.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-            transition: transform 0.3s ease;
+
+        .delay-2 {
+            animation-delay: 0.4s;
         }
-        
-        .coffee-btn:hover {
-            transform: translateY(-5px);
-        }
-        
-        /* 加载动画 */
-        .loader {
-            border: 3px solid rgba(93, 92, 222, 0.1);
-            border-radius: 50%;
-            border-top: 3px solid var(--primary-color);
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* 自适应暗色模式 */
-        @media (prefers-color-scheme: dark) {
-            .dark-mode-auto {
-                background-color: #1a1a1a;
-                color: #f0f0f0;
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
+<body class="antialiased">
+
+    <!-- Globe Background -->
+    <div id="globeViz"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="index.html" class="flex-shrink-0 flex items-center">
-                        <!-- Logo -->
-                        <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                            </svg>
-                        </div>
-                        <span class="ml-3 text-xl font-bold text-indigo-600 dark:text-indigo-400">足迹地图</span>
-                    </a>
-                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="#features" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            功能特点
-                        </a>
-                        <a href="#examples" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            足迹示例
-                        </a>
-                        <a href="#pricing" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            服务计划
-                        </a>
-                        <a href="#contact" class="border-transparent text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            联系我们
-                        </a>
+            <div class="flex justify-between h-20 items-center">
+                <a href="index.html" class="flex items-center gap-3 group">
+                    <div
+                        class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center group-hover:rotate-180 transition-transform duration-700">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-bold tracking-wider">Perspective</span>
+                </a>
+                <div class="hidden sm:flex space-x-8 items-center">
+                    <a href="#features"
+                        class="text-gray-300 hover:text-white text-sm font-medium tracking-wide transition-colors">FEATURES</a>
+                    <a href="#examples"
+                        class="text-gray-300 hover:text-white text-sm font-medium tracking-wide transition-colors">EXPLORE</a>
+                    <div class="flex gap-4">
+                        <a href="auth.html?mode=login"
+                            class="px-5 py-2.5 rounded-full border border-gray-600 text-sm font-medium hover:bg-white/5 transition-colors">Sign
+                            In</a>
+                        <a href="auth.html?mode=register"
+                            class="px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium btn-glow">Start
+                            Journey</a>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <button id="darkModeToggle" class="p-2 rounded-full text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">
-                        <!-- 太阳图标 (亮模式) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                        </svg>
-                        <!-- 月亮图标 (暗模式) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                        </svg>
-                    </button>
-                    <div class="ml-4 flex items-center gap-2">
-                        <a href="auth.html?mode=login" class="hidden sm:inline-block px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-600 dark:border-indigo-400 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900">
-                            登录
-                        </a>
-                        <a href="auth.html?mode=register" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            注册
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 移动端菜单 -->
-        <div class="sm:hidden" id="mobileMenu" style="display: none;">
-            <div class="pt-2 pb-3 space-y-1">
-                <a href="#features" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400">
-                    功能特点
-                </a>
-                <a href="#examples" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400">
-                    足迹示例
-                </a>
-                <a href="#pricing" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400">
-                    服务计划
-                </a>
-                <a href="#contact" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400">
-                    联系我们
-                </a>
-                <a href="auth.html?mode=login" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400">
-                    登录
-                </a>
             </div>
         </div>
     </nav>
 
-    <!-- 英雄区域 -->
-    <header class="hero-section py-16 sm:py-24">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:flex lg:items-center">
-                <div class="lg:w-1/2" data-aos="fade-right" data-aos-duration="1000">
-                    <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
-                        <span class="block">记录生活的每一步</span>
-                        <span class="block text-indigo-600 dark:text-indigo-400">创建您的专属足迹地图</span>
-                    </h1>
-                    <p class="mt-3 max-w-md mx-auto text-base text-gray-500 dark:text-gray-300 sm:text-lg md:mt-5 md:text-xl lg:mx-0">
-                        足迹地图帮助您记录和分享生活中的重要时刻。无论是人生旅程、家族历史，还是商务足迹，都能以令人印象深刻的方式展现。
-                    </p>
-                    <div class="mt-10 sm:flex sm:justify-start">
-                        <div class="rounded-md shadow">
-                            <a href="auth.html?mode=register" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
-                                开始创建
-                            </a>
-                        </div>
-                        <div class="mt-3 sm:mt-0 sm:ml-3">
-                            <a href="#demo" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10">
-                                在线体验
-                            </a>
-                        </div>
-                    </div>
+    <!-- Hero Section -->
+    <main class="relative h-screen flex items-center pointer-events-none">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+            <div class="max-w-3xl">
+                <div
+                    class="inline-block px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold tracking-widest uppercase mb-6 fade-in shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                    Now featuring AI-Powered Tracking
                 </div>
-                <div class="mt-12 lg:mt-0 lg:w-1/2" data-aos="fade-left" data-aos-duration="1000">
-                    <div class="relative h-64 sm:h-72 md:h-96 lg:h-full max-h-96 animate-float">
-                        <img class="absolute inset-0 w-full h-full object-cover rounded-lg shadow-xl" src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-1.2.1&amp;ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&amp;auto=format&amp;fit=crop&amp;w=1035&amp;q=80" alt="世界地图">
-                        <div class="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-indigo-600/0 rounded-lg"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- 示例地图 -->
-    <section id="demo" class="py-12 bg-gray-100 dark:bg-gray-800 overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center" data-aos="fade-up">
-                <h2 class="text-base font-semibold text-indigo-600 dark:text-indigo-400 tracking-wide uppercase">示例演示</h2>
-                <p class="mt-1 text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl sm:tracking-tight">
-                    足迹地图效果展示
+                <h1 class="text-6xl md:text-8xl font-black tracking-tight leading-tight fade-in delay-1">
+                    Share your <br />
+                    <span class="text-gradient">Global Perspective</span>
+                </h1>
+                <p class="mt-6 text-xl text-gray-400 font-light max-w-2xl fade-in delay-2 leading-relaxed">
+                    Transform your travel memories into breathtaking 3D planetary experiences. Let our AI instantly
+                    visualize the life path of any historical figure or celebrity.
                 </p>
-                <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500 dark:text-gray-300">
-                    这是一位历史学者的足迹地图，展示了生平各地的旅行轨迹。
-                </p>
-            </div>
-            <div class="mt-8" data-aos="zoom-in">
-                <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl overflow-hidden">
-                    <div class="aspect-w-16 aspect-h-9 relative">
-                        <div class="absolute inset-0 bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
-                            <div class="text-center">
-                                <svg class="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <p class="text-gray-600 dark:text-gray-300">地图加载中...</p>
-                            </div>
-                        </div>
-                        <iframe id="demoMap" style="width:100%; height:100%; border:none; display:none;" src="demo-map.html" onload="this.style.display='block'; this.previousElementSibling.style.display='none';"></iframe>
-                    </div>
-                </div>
-                <div class="mt-6 text-center">
-                    <a href="auth.html?mode=register" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        创建您自己的足迹地图
-                        <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 -mr-1 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                <div class="mt-10 flex gap-4 fade-in delay-2 pointer-events-auto">
+                    <a href="auth.html?mode=register"
+                        class="px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-lg btn-glow flex items-center gap-2">
+                        Create Your Map
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
+                    </a>
+                    <a href="#examples"
+                        class="px-8 py-4 rounded-full border border-gray-500 hover:border-white hover:bg-white/5 text-white font-bold text-lg transition-all flex items-center gap-2">
+                        Explore Gallery
                     </a>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- 功能特点 -->
-    <section id="features" class="py-16 bg-white dark:bg-gray-900">
+        <!-- Subtle gradient overlay at bottom to blend into next section -->
+        <div class="absolute bottom-0 w-full h-32 bg-gradient-to-t from-[#050505] to-transparent z-10"></div>
+    </main>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 relative z-20 bg-[#050505]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:text-center" data-aos="fade-up">
-                <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">功能特点</h2>
-                <p class="mt-2 text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-                    全方位记录您的生活轨迹
-                </p>
-                <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-300 lg:mx-auto">
-                    足迹地图提供丰富的功能，帮助您轻松创建、展示和分享您的生活历程。
-                </p>
+            <div class="text-center mb-20 fade-in">
+                <h2 class="text-indigo-500 font-bold tracking-widest uppercase text-sm mb-3">Redefining Cartography</h2>
+                <h3 class="text-4xl md:text-5xl font-bold">Unparalleled Immersion</h3>
             </div>
 
-            <div class="mt-16">
-                <div class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-                    <!-- 功能1：地图展示 -->
-                    <div class="relative" data-aos="fade-right" data-aos-delay="100">
-                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md feature-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-16">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">2D/3D地图展示</h3>
-                            <p class="mt-2 text-base text-gray-500 dark:text-gray-300">
-                                支持2D和3D地图切换，以地球仪或平面地图方式展示您的足迹路线。动态连线和动画效果让您的足迹充满活力。
-                            </p>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass-card p-8">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center mb-6 border border-indigo-500/30">
+                        <svg class="w-7 h-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
                     </div>
+                    <h4 class="text-xl font-bold mb-3">Stunning 3D Globes</h4>
+                    <p class="text-gray-400 font-light leading-relaxed">Experience your travels on a fully interactive
+                        3D globe with glowing connecting arcs, smooth animations, and premium space-themed aesthetics.
+                    </p>
+                </div>
 
-                    <!-- 功能2：时间线 -->
-                    <div class="relative" data-aos="fade-left" data-aos-delay="200">
-                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md feature-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-16">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">时间线自动播放</h3>
-                            <p class="mt-2 text-base text-gray-500 dark:text-gray-300">
-                                按时间顺序展示您的足迹，支持自动播放功能，生动展现您的人生旅程。可自定义播放速度和展示效果。
-                            </p>
-                        </div>
+                <!-- Feature 2 -->
+                <div class="glass-card p-8">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-6 border border-purple-500/30">
+                        <svg class="w-7 h-7 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
                     </div>
+                    <h4 class="text-xl font-bold mb-3">AI Footprint Generator</h4>
+                    <p class="text-gray-400 font-light leading-relaxed">Curious about Marco Polo or your favorite
+                        celebrity? Enlist our AI to instantly search, plot, and visualize their entire life's
+                        geographical journey in seconds.</p>
+                </div>
 
-                    <!-- 功能3：便捷编辑 -->
-                    <div class="relative" data-aos="fade-right" data-aos-delay="300">
-                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md feature-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-16">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">便捷的足迹编辑</h3>
-                            <p class="mt-2 text-base text-gray-500 dark:text-gray-300">
-                                直观的编辑界面，轻松添加、修改和删除足迹点。支持批量导入导出，快速创建复杂的足迹地图。
-                            </p>
-                        </div>
+                <!-- Feature 3 -->
+                <div class="glass-card p-8">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-pink-500/20 flex items-center justify-center mb-6 border border-pink-500/30">
+                        <svg class="w-7 h-7 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
                     </div>
-
-                    <!-- 功能4：个性化设置 -->
-                    <div class="relative" data-aos="fade-left" data-aos-delay="400">
-                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md feature-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-16">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">个性化定制</h3>
-                            <p class="mt-2 text-base text-gray-500 dark:text-gray-300">
-                                自定义主题、颜色、动画效果和地图风格。设置私密或公开访问权限，灵活控制谁可以查看您的足迹。
-                            </p>
-                        </div>
-                    </div>
+                    <h4 class="text-xl font-bold mb-3">Immersive Audio</h4>
+                    <p class="text-gray-400 font-light leading-relaxed">Turn your visual maps into vivid documentaries
+                        with neural TTS (Text-to-Speech) narration at each waypoint. It's storytelling on a planetary
+                        scale.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 足迹示例 -->
-    <section id="examples" class="py-16 bg-gray-50 dark:bg-gray-800">
+    <!-- Explore Gallery Section -->
+    <section id="examples" class="py-24 relative z-20 bg-[#050505] border-t border-white/5">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center" data-aos="fade-up">
-                <h2 class="text-base font-semibold text-indigo-600 dark:text-indigo-400 tracking-wide uppercase">足迹示例</h2>
-                <p class="mt-1 text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl sm:tracking-tight">
-                    探索他人的足迹故事
-                </p>
-                <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500 dark:text-gray-300">
-                    来看看其他用户是如何使用足迹地图记录他们的人生旅程的。
-                </p>
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-pink-500 font-bold tracking-widest uppercase text-sm mb-3">Community Hub</h2>
+                <h3 class="text-4xl md:text-5xl font-bold">Explore Masterpieces</h3>
+                <p class="mt-4 text-gray-400 font-light max-w-2xl mx-auto">Discover the incredible lives and journeys
+                    created by our AI and community members.</p>
             </div>
 
-            <div id="journeyCards" class="mt-12 grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                <!-- 这里将由JavaScript动态填充足迹卡片 -->
-                <!-- 加载提示 -->
-                <div id="journeyCardLoader" class="col-span-3 text-center py-10">
-                    <div class="loader"></div>
-                    <p class="mt-4 text-gray-500 dark:text-gray-400">加载中...</p>
+            <div id="journeyCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Loader -->
+                <div id="journeyCardLoader" class="col-span-full py-20 flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin">
+                    </div>
+                    <p class="mt-4 text-gray-400">Loading planetary trajectories...</p>
                 </div>
             </div>
+
+            <div class="mt-16 text-center">
+                <button id="loadMoreJourneys"
+                    class="px-8 py-3 rounded-full border border-gray-600 hover:border-indigo-500 text-white font-medium transition-colors hover:bg-indigo-500/10">
+                    Load More Journeys
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive scripting for background globe -->
+    <script>
+        // Use globe.gl for the background landing page
+        const weightColor = d3.scaleSequentialSqrt(d3.interpolateYlOrRd).domain([0, 1e7]);
+        
+        const globe = Globe()
+            (document.getElementById('globeViz'))
+            .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+            .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+            .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+            .showAtmosphere(true)
+            .atmosphereColor('#6366f1')
+            .atmosphereAltitude(0.25);
             
-            <div class="mt-10 text-center">
-                <button id="loadMoreJourneys" class="inline-flex items-center px-4 py-2 border border-indigo-600 dark:border-indigo-400 rounded-md shadow-sm text-base font-medium text-indigo-600 dark:text-indigo-400 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    加载更多足迹
-                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 -mr-1 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </section>
+        // Generate some random gorgeous arcs for the background
+        const N = 30;
+        const arcsData = [...Array(N).keys()].map(() => ({
+            startLat: (Math.random() - 0.5) * 180,
+            startLng: (Math.random() - 0.5) * 360,
+            endLat: (Math.random() - 0.5) * 180,
+            endLng: (Math.random() - 0.5) * 360,
+            color: ['#6366f1', '#a855f7', '#ec4899'][Math.floor(Math.random() * 3)]
+        }));
+        
+        globe.arcsData(arcsData)
+            .arcColor('color')
+            .arcDashLength(() => Math.random())
+            .arcDashGap(() => Math.random())
+            .arcDashAnimateTime(() => Math.random() * 4000 + 500)
+            .arcStroke(0.5);
 
-    <!-- 服务计划 (省略代码，与原先相同) -->
-    
-    <!-- 联系我们 -->
-    <section id="contact" class="py-16 bg-gray-50 dark:bg-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center" data-aos="fade-up">
-                <h2 class="text-base font-semibold text-indigo-600 dark:text-indigo-400 tracking-wide uppercase">联系我们</h2>
-                <p class="mt-1 text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl sm:tracking-tight">
-                    有任何问题，随时联系
-                </p>
-                <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500 dark:text-gray-300">
-                    我们随时准备为您提供帮助，回答您的问题，或听取您的建议。
-                </p>
-            </div>
+        // Auto-rotate
+        globe.controls().autoRotate = true;
+        globe.controls().autoRotateSpeed = 0.5;
+        globe.controls().enableZoom = false; // disable zoom on landing
+        
+        // Setup renderer size
+        const handleResize = () => {
+             globe.width(window.innerWidth).height(window.innerHeight);
+        }
+        window.addEventListener('resize', handleResize);
+        
+        // Point camera to look stunning
+        globe.pointOfView({ lat: 20, lng: 0, altitude: 2 });
+    </script>
 
-            <div class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2">
-                <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-8" data-aos="fade-right">
-                    <form id="contactForm" class="space-y-6">
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">姓名</label>
-                            <div class="mt-1">
-                                <input type="text" name="name" id="name" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md" placeholder="您的姓名" required="">
-                            </div>
-                        </div>
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">邮箱</label>
-                            <div class="mt-1">
-                                <input type="email" name="email" id="email" autocomplete="email" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md" placeholder="您的邮箱地址" required="">
-                            </div>
-                        </div>
-                        <div>
-                            <label for="message" class="block text-sm font-medium text-gray-700 dark:text-gray-300">留言</label>
-                            <div class="mt-1">
-                                <textarea id="message" name="message" rows="4" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md" placeholder="您的问题或建议" required=""></textarea>
-                            </div>
-                        </div>
-                        <div>
-                            <button type="submit" id="submitMessageBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                发送留言
-                            </button>
-                        </div>
-                        <div id="messageStatus" class="hidden mt-3 p-3 rounded-md"></div>
-                    </form>
-                </div>
-
-                <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-8" data-aos="fade-left">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-6">其他联系方式</h3>
-                    <div class="space-y-6">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-3 text-base text-gray-500 dark:text-gray-400">
-                                <p>contact@footprintmap.com</p>
-                                <p class="mt-1">工作日回复时间：24小时内</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-3 text-base text-gray-500 dark:text-gray-400">
-                                <p>官方微信: FootprintMapCN</p>
-                                <p class="mt-1">关注获取最新动态和活动</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-3 text-base text-gray-500 dark:text-gray-400">
-                                <p>QQ交流群: 123456789</p>
-                                <p class="mt-1">加入社区讨论</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 页脚 (省略代码，与原先相同) -->
-
-    <!-- 咖啡杯按钮 -->
-    <button id="coffeeBtn" class="coffee-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 5H6a2 2 0 00-2 2v9a3 3 0 003 3h6a3 3 0 003-3h1a2 2 0 002-2v-4a2 2 0 00-2-2h-1V5z"></path>
-        </svg>
-    </button>
-
-    <!-- 咖啡打赏模态框 -->
-    <div id="coffeeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white">请我喝杯咖啡</h3>
-                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">
-                如果您觉得足迹地图对您有帮助，欢迎给我买杯咖啡支持我的工作！
-            </p>
-            <div class="flex justify-center space-x-4 mb-4">
-                <!-- 这里放置支付二维码图片，使用SVG作为占位符 -->
-                <div class="border p-2 rounded-md text-center">
-                    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" class="mx-auto">
-                        <rect x="10" y="10" width="100" height="100" fill="none" stroke="currentColor" stroke-width="2"></rect>
-                        <text x="60" y="60" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="currentColor">微信支付码</text>
-                    </svg>
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">微信</p>
-                </div>
-                <div class="border p-2 rounded-md text-center">
-                    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" class="mx-auto">
-                        <rect x="10" y="10" width="100" height="100" fill="none" stroke="currentColor" stroke-width="2"></rect>
-                        <text x="60" y="60" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="currentColor">支付宝支付码</text>
-                    </svg>
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">支付宝</p>
-                </div>
-            </div>
-            <p class="text-sm text-center text-gray-500 dark:text-gray-400">
-                感谢您的支持！您的鼓励是我前进的动力。
-            </p>
-        </div>
-    </div>
-
-    <!-- 足迹详情模态框 -->
-    <div id="journeyDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white" id="journeyDetailTitle">足迹详情</h3>
-                <button id="closeJourneyDetailBtn" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div id="journeyDetailContent">
-                <!-- 这里将由JavaScript动态填充足迹详情 -->
-                <div class="loader mx-auto"></div>
-                <p class="text-center my-4 text-gray-500 dark:text-gray-400">加载中...</p>
-            </div>
-            <div class="mt-6 flex justify-end">
-                <a id="viewFullJourneyBtn" href="#" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    查看完整足迹
-                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 -mr-1 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- 引入JS库 -->
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="assets/js/main.js"></script>
+</body>
 
-
-</body></html>
+</html>

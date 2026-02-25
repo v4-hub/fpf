@@ -1,980 +1,412 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>饶宗颐先生生平足迹 - 足迹地图</title>
-    
-    <!-- 网站图标 -->
+    <title>3D Journey Explorer | 足迹地图</title>
     <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
-    
-    <!-- Tailwind CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
-    <!-- 自定义CSS -->
-    <link rel="stylesheet" href="css/main.css">
-    
-    <!-- Link to ArcGIS JS API CSS -->
-    <link rel="stylesheet" id="esri-theme-css" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
-    
-    <!-- 整合 3D8 CSS (调整后) -->
+
+    <!-- Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- Globe.gl & Three.js -->
+    <script src="https://unpkg.com/three"></script>
+    <script src="https://unpkg.com/globe.gl"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* 页面基础布局 */
         body {
-            padding: 0;
             margin: 0;
-            height: 100vh;
-            width: 100%;
+            padding: 0;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            background-color: #050505;
+            color: white;
+            font-family: 'Outfit', sans-serif;
         }
-        
-        /* 导航栏固定高度 */
-        header {
-            flex: 0 0 auto;
-            z-index: 50;
-        }
-        
-        /* 主要内容区 - 填满剩余空间，包含地图 */
-        .main-content {
-            flex: 1;
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-        }
-        
-        /* 页脚固定高度 */
-        footer {
-            flex: 0 0 auto;
-            z-index: 50;
-        }
-        
-        /* 地图容器 */
-        #viewDiv {
+
+        #globeViz {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
         }
-        
-        /* 标题覆盖层 */
-        .title-container {
+
+        .overlay-ui {
             position: absolute;
-            top: 20px;
-            left: 0;
-            width: 100%;
-            z-index: 20;
+            z-index: 10;
             pointer-events: none;
-            text-align: center;
+            /* Let clicks pass through generally */
         }
-        
-        #titleDiv {
-            display: inline-block;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 0.375rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            pointer-events: none;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+
+        .pointer-events-auto {
+            pointer-events: auto;
         }
-        
-        .journey-meta {
-            display: inline-flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 0.375rem;
-            gap: 1rem;
-            pointer-events: none;
+
+        /* Glassmorphism panel */
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        
-        .journey-meta-item {
-            display: flex;
-            align-items: center;
-            font-size: 0.875rem;
-        }
-        
-        .journey-meta-item svg {
-            width: 1rem;
-            height: 1rem;
-            margin-right: 0.25rem;
-        }
-        
-        /* 加载指示器 */
-        #loadingIndicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 0.375rem;
-            z-index: 50;
-            display: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        
-        /* 主控制按钮组 */
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 0.375rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            display: none;
-            flex-direction: row;
-            gap: 8px;
-            z-index: 20;
-        }
-        
-        .dark #controls {
-            background-color: rgba(31, 41, 55, 0.9);
-        }
-        
-        #controls button {
-            padding: 8px 12px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            border-radius: 0.25rem;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-            border: 1px solid #e5e7eb;
-            background-color: white;
-            color: #374151;
-        }
-        
-        .dark #controls button {
-            background-color: #374151;
-            color: #f3f4f6;
-            border-color: #4b5563;
-        }
-        
-        #controls button:hover:not(:disabled) {
-            background-color: #f3f4f6;
-        }
-        
-        .dark #controls button:hover:not(:disabled) {
-            background-color: #4b5563;
-        }
-        
-        #controls button:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        
-        /* 设置面板 */
-        #settingsPanel {
-            position: absolute;
-            bottom: 85px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 0.375rem;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 30;
-            min-width: 280px;
-            color: #374151;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .dark #settingsPanel {
-            background-color: rgba(31, 41, 55, 0.95);
-            color: #f3f4f6;
-            border-color: #4b5563;
-        }
-        
-        #settingsPanel h4 {
-            margin: 0 0 12px 0;
-            text-align: center;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 8px;
-            font-size: 1.1rem;
-        }
-        
-        .dark #settingsPanel h4 {
-            border-bottom-color: #4b5563;
-        }
-        
-        #settingsPanel button {
-            padding: 8px 12px;
-            background-color: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-            font-size: 0.875rem;
-            color: #374151;
-        }
-        
-        .dark #settingsPanel button {
-            background-color: #374151;
-            color: #f3f4f6;
-            border-color: #4b5563;
-        }
-        
-        #settingsPanel button:hover:not(:disabled) {
-            background-color: #f3f4f6;
-        }
-        
-        .dark #settingsPanel button:hover:not(:disabled) {
-            background-color: #4b5563;
-        }
-        
-        #centerPointFeedback {
-            font-size: 0.75rem;
-            font-style: italic;
-            color: #6b7280;
-            margin-top: -5px;
-            margin-bottom: 5px;
-            display: none;
-            text-align: center;
-        }
-        
-        .dark #centerPointFeedback {
-            color: #9ca3af;
-        }
-        
-        .setting-item {
-            padding: 7px 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.875rem;
-        }
-        
-        .setting-item label {
-            flex-basis: 120px;
-            text-align: right;
-            flex-shrink: 0;
-        }
-        
-        .setting-item input[type="range"] {
-            flex-grow: 1;
-            cursor: pointer;
-            margin: 0;
-        }
-        
-        .setting-item span {
-            min-width: 35px;
-            text-align: right;
-            font-weight: 600;
-        }
-        
-        /* 足迹列表面板 */
-        #footprintsListPanel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 320px;
-            max-height: calc(100% - 100px);
-            background-color: rgba(255, 255, 255, 0.95);
-            color: #374151;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            padding: 15px;
+
+        .journey-card {
+            top: 2rem;
+            left: 2rem;
+            width: 380px;
+            max-height: 85vh;
             overflow-y: auto;
-            z-index: 25;
-            display: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        
-        .dark #footprintsListPanel {
-            background-color: rgba(31, 41, 55, 0.95);
-            color: #f3f4f6;
-            border-color: #4b5563;
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
         }
-        
-        #footprintsListPanel .list-header {
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 3px;
+        }
+
+        .point-item {
+            transition: all 0.3s;
+            border-left: 2px solid transparent;
+        }
+
+        .point-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-left-color: #6366f1;
+        }
+
+        .point-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            border-left-color: #a855f7;
+        }
+
+        .play-controls {
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            border-radius: 4rem;
+        }
+
+        .control-btn {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
             align-items: center;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 10px;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        
-        .dark #footprintsListPanel .list-header {
-            border-bottom-color: #4b5563;
+
+        .control-btn:hover {
+            background: rgba(99, 102, 241, 0.6);
+            transform: scale(1.1);
         }
-        
-        #footprintsListPanel h4 {
-            margin: 0;
-            font-size: 1.1rem;
-        }
-        
-        #footprintsList {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        #footprintsList li {
-            padding: 10px 8px;
-            border-bottom: 1px solid #e5e7eb;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: background-color 0.2s ease;
-            line-height: 1.4;
-        }
-        
-        .dark #footprintsList li {
-            border-bottom-color: #4b5563;
-        }
-        
-        #footprintsList li:hover {
-            background-color: rgba(243, 244, 246, 0.8);
-        }
-        
-        .dark #footprintsList li:hover {
-            background-color: rgba(75, 85, 99, 0.3);
-        }
-        
-        #footprintsList li:last-child {
-            border-bottom: none;
-        }
-        
-        /* 关闭按钮 */
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 0 5px;
-            line-height: 1;
-            transition: color 0.2s ease;
-        }
-        
-        #settingsPanel .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #6b7280;
-        }
-        
-        .dark #settingsPanel .close-btn {
-            color: #9ca3af;
-        }
-        
-        #footprintsListPanel .close-btn {
-            color: #6b7280;
-        }
-        
-        .dark #footprintsListPanel .close-btn {
-            color: #9ca3af;
-        }
-        
-        .close-btn:hover {
-            color: #ef4444;
-        }
-        
-        /* 深色模式适配 ArcGIS 弹窗 */
-        .dark .esri-popup .esri-popup__main-container {
-            background-color: rgba(31, 41, 55, 0.95);
-            color: #f3f4f6;
-            border: 1px solid #4b5563;
-        }
-        
-        .dark .esri-popup .esri-popup__header-title {
-            color: #f3f4f6;
-        }
-        
-        .dark .esri-feature__content-element {
-            color: #f3f4f6;
-        }
-        
-        .dark .esri-popup__pointer-direction {
-            background-color: rgba(31, 41, 55, 0.95);
-            border-color: #4b5563;
-        }
-        
-        .dark .esri-popup__button {
-            color: #9ca3af;
+
+        .control-btn.active {
+            background: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
         }
     </style>
 </head>
 
-<body class="light-theme">
-    <!-- 顶部导航栏 -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm fixed top-0 w-full z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <!-- Logo -->
-                    <a href="index.html" class="flex-shrink-0 flex items-center">
-                        <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                            </svg>
-                        </div>
-                        <span class="ml-3 text-xl font-bold text-indigo-600 dark:text-indigo-400">足迹地图</span>
-                    </a>
-                </div>
-                
-                <div class="flex items-center">
-                    <!-- 深色模式切换 -->
-                    <button id="darkModeToggle" class="p-2 rounded-full text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">
-                        <!-- 太阳图标 (亮模式) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                        </svg>
-                        <!-- 月亮图标 (暗模式) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                        </svg>
-                    </button>
-                    
-                    <!-- 控制台按钮 (如果用户已登录) -->
-                    <div id="dashboardLink" class="ml-4 hidden">
-                        <a href="dashboard.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                            </svg>
-                            控制台
-                        </a>
-                    </div>
-                    
-                    <!-- 登录按钮 (如果用户未登录) -->
-                    <div id="loginLink" class="ml-4">
-                        <a href="auth.html?mode=login" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                            </svg>
-                            登录
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+<body>
 
-    <!-- 主内容区域 -->
-    <div class="main-content">
-        <!-- 地图容器 -->
-        <div id="viewDiv"></div>
-        
-        <!-- 标题和元数据 -->
-        <div class="title-container">
-            <div id="titleDiv">饶宗颐先生生平足迹</div>
-            <div class="journey-meta">
-                <div class="journey-meta-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                    </svg>
-                    <span>创建者: 赵刚</span>
-                </div>
-                <div class="journey-meta-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    <span>创建于: 2023年6月15日</span>
-                </div>
-                <div class="journey-meta-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                    <span>浏览: 560</span>
-                </div>
-                <div class="journey-meta-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span>足迹点: 13</span>
-                </div>
-            </div>
+    <!-- The 3D Canvas -->
+    <div id="globeViz"></div>
+
+    <!-- UI Overlay: Journey Selection/Data -->
+    <div class="overlay-ui pointer-events-auto journey-card glass-panel p-6 flex flex-col">
+        <a href="dashboard.html" class="text-xs text-indigo-400 hover:text-indigo-300 mb-4 flex items-center gap-1">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+
+        <h1 id="jTitle"
+            class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 mb-2">
+            Loading...</h1>
+        <p id="jDesc" class="text-sm text-gray-400 font-light mb-6">Fetching journey data from the stars...</p>
+
+        <div class="flex items-center gap-4 mb-6 text-xs text-gray-500 border-b border-white/10 pb-4">
+            <span><i class="fas fa-eye"></i> <span id="jViews">0</span></span>
+            <span><i class="fas fa-map-marker-alt"></i> <span id="jPointsCount">0</span> stops</span>
         </div>
-        
-        <!-- 加载状态指示器 -->
-        <div id="loadingIndicator">正在加载...</div>
-        
-        <!-- 地图控制按钮组 -->
-        <div id="controls">
-            <button id="prevBtn" title="上一个足迹点">上一处</button>
-            <button id="playBtn" title="自动播放/暂停">播放</button>
-            <button id="nextBtn" title="下一个足迹点">下一处</button>
-            <button id="resetBtn" title="回到第一个点">重置</button>
-            <button id="globalBtn" title="缩放到全球视图（自定义中心）">全球</button>
-            <button id="allBtn" title="切换2D/3D视图">2D 地图</button>
-            <button id="settingsBtn" title="打开设置面板">设置</button>
-        </div>
-        
-        <!-- 设置面板 (初始隐藏) -->
-        <div id="settingsPanel">
-            <h4>设置</h4>
-            <button id="themeSubBtn">切换主题</button>
-            <button id="setCenterBtn">设置中心点</button>
-            <div id="centerPointFeedback">请在3D地图上点击选择新的中心点...</div>
-            <button id="showListBtn">显示足迹列表</button>
-            <div class="setting-item">
-                <label for="speedSlider">飞行速度:</label>
-                <input type="range" id="speedSlider" min="1" max="10" value="5" step="1">
-                <span id="speedValue">5</span>
-            </div>
-            <div class="setting-item">
-                <label for="popupSlider">显示时长(秒):</label>
-                <input type="range" id="popupSlider" min="1" max="10" value="5" step="1">
-                <span id="popupValue">5</span>
-            </div>
-            <div class="setting-item">
-                <label for="altitudeSlider">弧线高度(km):</label>
-                <input type="range" id="altitudeSlider" min="0" max="1000" value="50" step="50">
-                <span id="altitudeValue">50</span>
-            </div>
-            
-            <button id="closeSettingsBtn" class="close-btn" title="关闭设置">X</button>
-        </div>
-        
-        <!-- 足迹列表面板 (初始隐藏) -->
-        <div id="footprintsListPanel">
-            <div class="list-header">
-                <h4>足迹列表</h4>
-                <button id="closeListBtn" class="close-btn" title="关闭列表">X</button>
-            </div>
-            <ul id="footprintsList">
-                <!-- 列表项由JS动态添加 -->
-            </ul>
+
+        <div class="flex-1 overflow-y-auto pr-2" id="pointsList">
+            <!-- Points will be injected here -->
         </div>
     </div>
 
-    <!-- 页脚 -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center justify-between sm:flex-row">
-                <div class="flex items-center">
-                    <span class="text-sm text-gray-500 dark:text-gray-400">© 2023 足迹地图. 保留所有权利.</span>
-                </div>
-                <div class="mt-4 sm:mt-0">
-                    <nav class="flex space-x-4">
-                        <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                            条款
-                        </a>
-                        <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                            隐私
-                        </a>
-                        <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                            帮助
-                        </a>
-                        <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                            联系我们
-                        </a>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <!-- UI Overlay: Player Controls -->
+    <div class="overlay-ui pointer-events-auto play-controls glass-panel">
+        <button class="control-btn" id="btnPrev" title="Previous Stop"><i class="fas fa-backward"></i></button>
+        <button class="control-btn active" id="btnPlay" title="Auto Play"><i class="fas fa-play"></i></button>
+        <button class="control-btn" id="btnNext" title="Next Stop"><i class="fas fa-forward"></i></button>
+        <button class="control-btn" id="btnAudioToggle" title="Toggle Auto-Audio"><i
+                class="fas fa-volume-up"></i></button>
+    </div>
 
-    <!-- ArcGIS JS API 库 -->
-    <script src="https://js.arcgis.com/4.29/"></script>
-    
-    <!-- 原始的 3D8.js 内容，进行适配调整 -->
+    <!-- Audio Element -->
+    <audio id="ttsAudio" class="hidden"></audio>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 检查用户登录状态
-            checkUserAuthentication();
-            
-            // 同步深色模式设置
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            if (darkModeToggle) {
-                darkModeToggle.addEventListener('click', function() {
-                    document.documentElement.classList.toggle('dark');
-                    document.body.classList.toggle('dark-theme');
-                    document.body.classList.toggle('light-theme');
-                    const currentMode = document.documentElement.classList.contains('dark');
-                    localStorage.setItem('darkMode', currentMode);
-                });
-                
-                // 初始化主题
-                const isDarkMode = localStorage.getItem('darkMode') === 'true';
-                if (isDarkMode) {
-                    document.documentElement.classList.add('dark');
-                    document.body.classList.remove('light-theme');
-                    document.body.classList.add('dark-theme');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    document.body.classList.add('light-theme');
-                    document.body.classList.remove('dark-theme');
-                }
+        // Data State
+        let journeyData = null;
+        let points = [];
+        let arcs = [];
+        let currentIndex = -1;
+        let isPlaying = false;
+        let autoAudio = true;
+        let playInterval;
+
+        // Ensure audio element resets properly
+        const audioEl = document.getElementById('ttsAudio');
+        audioEl.onended = () => {
+            if (isPlaying) {
+                // When audio ends, wait 1 sec then go to next
+                setTimeout(nextPoint, 1500);
             }
-        });
-        
-        /**
-         * 检查用户登录状态
-         */
-        function checkUserAuthentication() {
-            const currentUser = getCurrentUser();
-            
-            if (currentUser) {
-                // 用户已登录，显示控制台链接，隐藏登录链接
-                document.getElementById('dashboardLink').classList.remove('hidden');
-                document.getElementById('loginLink').classList.add('hidden');
-            } else {
-                // 用户未登录，隐藏控制台链接，显示登录链接
-                document.getElementById('dashboardLink').classList.add('hidden');
-                document.getElementById('loginLink').classList.remove('hidden');
-            }
-        }
-        
-        /**
-         * 从localStorage获取当前用户信息
-         * @returns {Object|null} 用户信息对象或null
-         */
-        function getCurrentUser() {
+        };
+
+        // Initialize Globe
+        const globe = Globe()
+            (document.getElementById('globeViz'))
+            .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+            .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+            .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+            .showAtmosphere(true)
+            .atmosphereColor('#6366f1')
+            .atmosphereAltitude(0.25)
+            .arcColor(() => '#a855f7')
+            .arcDashLength(0.4)
+            .arcDashGap(0.2)
+            .arcDashAnimateTime(1500)
+            .arcStroke(1)
+            .pointColor(() => '#ec4899')
+            .pointAltitude(0.08)
+            .pointRadius(0.5)
+            .pointsTransitionDuration(1000);
+
+        // Initial setup
+        globe.controls().autoRotate = true;
+        globe.controls().autoRotateSpeed = 0.5;
+
+        // Fetch Data
+        const urlParams = new URLSearchParams(window.location.search);
+        const journeyId = urlParams.get('id') || 1; // Default to 1 for demo purposes
+
+        async function fetchJourney() {
             try {
-                const userJson = localStorage.getItem('footprintMapCurrentUser');
-                if (!userJson) return null;
-                return JSON.parse(userJson);
-            } catch (error) {
-                console.error('获取用户信息失败:', error);
-                return null;
+                // We use relative URL to api to fetch
+                const res = await fetch(`/api/journeys/${journeyId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!res.ok) throw new Error("Failed to fetch");
+                journeyData = await res.json();
+
+                document.getElementById('jTitle').innerText = journeyData.title;
+                document.getElementById('jDesc').innerText = journeyData.description || '';
+                document.getElementById('jViews').innerText = journeyData.view_count;
+                document.getElementById('jPointsCount').innerText = journeyData.points.length;
+
+                processPoints(journeyData.points);
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('jTitle').innerText = "Error Loading Journey";
+                document.getElementById('jDesc').innerText = "Could not connect to database or journey not found.";
             }
         }
-    
-        // 以下是原始3d8.js的内容
-        require([
-            "esri/Map",
-            "esri/views/MapView",
-            "esri/views/SceneView",
-            "esri/layers/CSVLayer",
-            "esri/layers/GraphicsLayer",
-            "esri/Basemap",
-            "esri/Graphic",
-            "esri/geometry/geometryEngine",
-            "esri/geometry/Polyline",
-            "esri/geometry/Point"
-        ], function (
-            Map, MapView, SceneView, CSVLayer, GraphicsLayer, Basemap, Graphic,
-            geometryEngine, Polyline, Point
-        ) {
 
-            // --- Core Variables ---
-            let map;
-            let csvLayer;
-            let animationLayer;
-            let connectionsLayer;
-            let sortedFeatures = [];
-            let currentIndex = 0;
-            let isPlaying = false;
-            let playTimeout = null;
-            let currentTheme = 'light';
-            let isAnimating = false;
-            let isSettingCenter = false; // Flag for center point selection mode
-            let centerPointClickHandle = null; // Handle for the map click listener
-            let customCenterPoint = null; // Stores the user-defined center Point geometry
+        function processPoints(rawPoints) {
+            // Sort by order_index just in case
+            points = rawPoints.sort((a, b) => a.order_index - b.order_index);
 
-            const DEFAULT_CENTER_LON = 113.2644; // Guangzhou
-            const DEFAULT_CENTER_LAT = 23.1291;
+            // Render list
+            const listDiv = document.getElementById('pointsList');
+            listDiv.innerHTML = '';
 
-            // --- Dynamic Settings ---
-            let PRE_ANIM_ZOOM_DURATION = 600;
-            let ANIMATION_DURATION = 1500;
-            let POPUP_DELAY = 5000;
-            let MAX_ARC_HEIGHT = 50000;
+            points.forEach((p, idx) => {
+                const item = document.createElement('div');
+                item.className = 'point-item cursor-pointer p-4 mb-2 rounded border border-white/5';
+                item.onclick = () => focusPoint(idx, true); // true = user clicked
+                item.id = `point-item-${idx}`;
 
-            // --- App State ---
-            const appState = { mapView: null, sceneView: null, activeView: null, container: "viewDiv" };
+                item.innerHTML = `
+                    <div class="text-xs text-indigo-400 font-bold mb-1">${p.time}</div>
+                    <div class="text-lg font-bold mb-1">${p.location}</div>
+                    <div class="text-sm text-gray-400 line-clamp-2">${p.content}</div>
+                `;
+                listDiv.appendChild(item);
+            });
 
-            // --- DOM Elements ---
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const controlsDiv = document.getElementById('controls');
-            const titleDiv = document.getElementById('titleDiv'); // Added
-            // Main Controls
-            const prevBtn = document.getElementById('prevBtn');
-            const playBtn = document.getElementById('playBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            const settingsBtn = document.getElementById('settingsBtn');
-            const globalBtn = document.getElementById('globalBtn');
-            const allBtn = document.getElementById('allBtn');
-            const themeLink = document.getElementById('esri-theme-css');
-            // Settings Panel
-            const settingsPanel = document.getElementById('settingsPanel');
-            const themeSubBtn = document.getElementById('themeSubBtn');
-            const setCenterBtn = document.getElementById('setCenterBtn'); // Added
-            const centerPointFeedback = document.getElementById('centerPointFeedback'); // Added
-            const speedSlider = document.getElementById('speedSlider');
-            const speedValueSpan = document.getElementById('speedValue');
-            const popupSlider = document.getElementById('popupSlider');
-            const popupValueSpan = document.getElementById('popupValue');
-            const altitudeSlider = document.getElementById('altitudeSlider');
-            const altitudeValueSpan = document.getElementById('altitudeValue');
-            const showListBtn = document.getElementById('showListBtn');
-            const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-            // Footprints List Panel
-            const footprintsListPanel = document.getElementById('footprintsListPanel');
-            const footprintsListUl = document.getElementById('footprintsList');
-            const closeListBtn = document.getElementById('closeListBtn');
-
-            // --- Sample Data ---
-            const sampleCsvData = `时间,推测具体时间,地点,经纬度坐标(纬度),经纬度坐标(经度),内容
-1917年8月9日,1917/8/9,广东潮州,23.6567,116.6226,饶宗颐出生于广东潮安县。
-1938年10月,1938/10/15,广东广州,23.1291,113.2644,逼于社会动荡形势，中山大学决定迁校于云南澂江。年尾，先生开始染上疟疾，可是当时并无感觉。
-1938年10月,1938/10/20,广东潮州,23.6567,116.6226,广州沦陷，广东通志馆关闭，中山大学前往云南澄江。潮汕地区未落入敌寇之手，返回潮州，到凤凰山对畲族进行调查研究。
-1939年2月,1939/2/15,广东梅州,24.2886,116.1176,以广东通志馆纂修资格，经詹安泰推荐，受聘为中山大学研究员。
-1941年,1941/7/1,廣西桂林,25.2790,110.2882,"抗戰軍興，先生自此流徙西南、西北各地。"
-1943年秋,1943/9/1,貴州遵義,27.7139,106.9298,"抵達遵義浙江大學，講授甲骨文。"
-1946年7月,1946/7/1,廣東廣州,23.1291,113.2644,"抗戰勝利後，先生返廣州。任教於廣東省立文理學院、廣東大學。"
-1949年,1949/10/1,香港,22.3193,114.1694,"移居香港，任教於新亞書院（今香港中文大學前身）。"
-1962年,1962/7/1,法國巴黎,48.8566,2.3522,"赴法，結識法蘭西學院戴密微，開展敦煌學研究。"
-1970年,1970/7/1,新加坡,1.3521,103.8198,"任新加坡大學中文系首任講座教授兼系主任。"
-1978年,1978/10/1,香港,22.3193,114.1694,"返港，任香港中文大學中文系講座教授及系主任。"
-2000年,2000/1/1,香港,22.3193,114.1694,"獲香港特別行政區政府頒授大紫荊勳章。"
-2018年2月6日,2018/2/6,香港,22.3193,114.1694,"饒宗頤先生於香港逝世，享年101歲。"`;
-
-            // --- Popup Template ---
-            const popupTemplate = { title: "{地点} ({时间})", content: [{ type: "fields", fieldInfos: [{ fieldName: "推测具体时间", label: "日期" }, { fieldName: "内容", label: "事件" }] }] };
-
-            // --- Initialization ---
-            async function initialize() {
-                disableControls(); loadingIndicator.style.display = 'block'; loadingIndicator.innerText = '初始化地图...';
-                map = new Map({ basemap: "satellite", ground: "world-elevation" });
-                animationLayer = new GraphicsLayer({ listMode: "hide", title: "动画层", elevationInfo: { mode: "relative-to-ground" } });
-                connectionsLayer = new GraphicsLayer({ listMode: "hide", title: "连接线层" });
-                map.addMany([connectionsLayer, animationLayer]);
-                await createCsvLayer();
-                if (!csvLayer) { loadingIndicator.innerText = '无法创建数据层!'; controlsDiv.style.display = 'flex'; return; }
-                map.add(csvLayer);
-                const commonViewParams = { map: map, popup: { dockEnabled: false, visibleElements: { collapseButton: false }, highlightEnabled: true } };
-                appState.sceneView = new SceneView({ ...commonViewParams, container: appState.container });
-                appState.activeView = appState.sceneView;
-                appState.mapView = new MapView({ ...commonViewParams, container: null });
-                attachClickListeners(appState.mapView);
-                attachClickListeners(appState.sceneView);
-                loadingIndicator.innerText = '加载数据...';
-                await processFeatures();
-
-                // Set initial 3D viewpoint using custom or default center
-                if (appState.activeView.type === "3d") {
-                    const initialCenter = customCenterPoint ? [customCenterPoint.longitude, customCenterPoint.latitude] : [DEFAULT_CENTER_LON, DEFAULT_CENTER_LAT];
-                    console.log("Setting initial 3D viewpoint centered near:", initialCenter);
-                    appState.activeView.goTo({
-                        target: initialCenter,
-                        zoom: 5 // Adjust as needed
-                    }, { duration: 1500 }).catch(handleGoToError);
-                }
-
-                setupSettingsPanel();
-                loadingIndicator.style.display = 'none'; controlsDiv.style.display = 'flex';
+            // Build arcs
+            arcs = [];
+            for (let i = 0; i < points.length - 1; i++) {
+                arcs.push({
+                    startLat: points[i].latitude,
+                    startLng: points[i].longitude,
+                    endLat: points[i + 1].latitude,
+                    endLng: points[i + 1].longitude
+                });
             }
 
-            // --- Create CSV Layer Helpers --- (No changes needed)
-            async function createCsvLayer() { try { const response = await fetch("rao.csv"); if (response.ok) { csvLayer = new CSVLayer({ url: "rao.csv", latitudeField: "经纬度坐标(纬度)", longitudeField: "经纬度坐标(经度)", popupTemplate: popupTemplate, renderer: { type: "simple", symbol: { type: "simple-marker", size: 8, color: [255, 100, 0, 0.8], outline: { color: [255, 255, 255, 0.7], width: 1 } } } }); } else { await useSampleData(); } } catch (error) { console.error("Error fetching rao.csv:", error); await useSampleData(); } }
-            async function useSampleData() { const blob = new Blob([sampleCsvData], { type: 'text/csv' }); const blobUrl = URL.createObjectURL(blob); csvLayer = new CSVLayer({ url: blobUrl, latitudeField: "经纬度坐标(纬度)", longitudeField: "经纬度坐标(经度)", popupTemplate: popupTemplate, renderer: { type: "simple", symbol: { type: "simple-marker", size: 8, color: [255, 100, 0, 0.8], outline: { color: [255, 255, 255, 0.7], width: 1 } } } }); }
+            // Update Globe
+            globe.pointsData(points.map(p => ({ lat: p.latitude, lng: p.longitude, size: 0.5 })));
+            globe.arcsData(arcs);
 
-            // --- Attach/Handle Click Listeners --- (Modified handleViewClick)
-            function attachClickListeners(targetView) { targetView.on("click", handleViewClick); }
-            function handleViewClick(event) {
-                // Ignore clicks during center point selection or animation
-                if (isSettingCenter || isAnimating || !appState.activeView) return;
-
-                // Existing logic to handle popup/panel closing
-                appState.activeView.hitTest(event).then(function (response) {
-                    const results = response.results;
-                    const hitGraphic = results.some(result => result.graphic && result.graphic.layer === csvLayer);
-                    const popupElement = appState.activeView.popup?.container;
-                    const hitPopup = popupElement ? popupElement.contains(event.target) : false;
-                    // Check if click was inside settings or list panel
-                    const settingsPanelHit = settingsPanel.contains(event.target);
-                    const listPanelHit = footprintsListPanel.contains(event.target);
-
-                    // Close panels/popup only if click is outside relevant elements
-                    if (!hitGraphic && !hitPopup && !settingsPanelHit && !listPanelHit) {
-                        appState.activeView.closePopup();
-                        settingsPanel.style.display = 'none';
-                        footprintsListPanel.style.display = 'none';
-                    }
-                }).catch(err => { if (err.name !== "AbortError") { console.warn("hitTest error:", err); } });
+            // Start visualization
+            if (points.length > 0) {
+                setTimeout(() => focusPoint(0), 1000);
             }
+        }
 
-            // --- Process Features --- (No changes needed)
-            async function processFeatures() { if (!csvLayer) return; try { await csvLayer.load(); const query = csvLayer.createQuery(); query.where = "1=1"; query.outFields = ["*"]; query.returnGeometry = true; const results = await csvLayer.queryFeatures(query); if (!results.features || results.features.length === 0) { console.error("No features..."); disableControls(); return; } sortedFeatures = results.features.sort((a, b) => { const dateA = new Date(a.attributes["推测具体时间"]); const dateB = new Date(b.attributes["推测具体时间"]); if (isNaN(dateA) && isNaN(dateB)) return 0; if (isNaN(dateA)) return 1; if (isNaN(dateB)) return -1; return dateA - dateB; }); populateFootprintsList(); enableControls(); } catch (error) { console.error("Error processing features:", error); disableControls(); } }
+        async function playTTS(text) {
+            if (!autoAudio) return;
 
-            // --- Populate Footprints List --- (No changes needed)
-            function populateFootprintsList() { if (!footprintsListUl || sortedFeatures.length === 0) return; footprintsListUl.innerHTML = ''; sortedFeatures.forEach((feature, index) => { const li = document.createElement('li'); const time = feature.attributes["时间"] || "N/A"; const location = feature.attributes["地点"] || "N/A"; li.textContent = `${time} - ${location}`; li.dataset.index = index; li.addEventListener('click', () => { if (isAnimating) return; const clickedIndex = parseInt(li.dataset.index, 10); if (!isNaN(clickedIndex)) { stopPlayback(); footprintsListPanel.style.display = 'none'; goToFeature(clickedIndex, currentIndex); } }); footprintsListUl.appendChild(li); }); }
-
-            // --- Animation Function --- (No changes needed)
-            function animateArc(startFeature, endFeature, duration = ANIMATION_DURATION) { return new Promise(async (resolve) => { if (!startFeature || !endFeature || !startFeature.geometry || !endFeature.geometry || isAnimating || appState.activeView.type !== '3d') { resolve(); return; } isAnimating = true; animationLayer.removeAll(); hideAllConnections(); const startPoint = startFeature.geometry; const endPoint = endFeature.geometry; let groundPathLine; try { groundPathLine = geometryEngine.geodesicDensify(new Polyline({ paths: [[[startPoint.longitude, startPoint.latitude], [endPoint.longitude, endPoint.latitude]]], spatialReference: startPoint.spatialReference }), 50000, "meters"); } catch (e) { groundPathLine = new Polyline({ paths: [[[startPoint.longitude, startPoint.latitude], [endPoint.longitude, endPoint.latitude]]], spatialReference: startPoint.spatialReference });} if (!groundPathLine || !groundPathLine.paths || groundPathLine.paths[0].length < 2) { isAnimating = false; resolve(); return; } const groundPathPoints = groundPathLine.paths[0]; const totalSteps = groundPathPoints.length - 1; const elevatedPathCoords = groundPathPoints.map((coords, index) => [coords[0], coords[1], MAX_ARC_HEIGHT * Math.sin(Math.PI * (index / totalSteps))]); const elevatedPathLine = new Polyline({ paths: [elevatedPathCoords], hasZ: true, spatialReference: startPoint.spatialReference }); const pulseSymbol = { type: "simple-marker", style: "circle", color: [255, 255, 0, 0.8], size: 10, outline: { color: [255, 255, 255, 0.5], width: 1 } }; const pulseGraphic = new Graphic({ geometry: new Point({ longitude: elevatedPathCoords[0][0], latitude: elevatedPathCoords[0][1], z: elevatedPathCoords[0][2], spatialReference: startPoint.spatialReference }), symbol: pulseSymbol }); const arcSymbol = { type: "simple-line", color: [255, 255, 0, 0.6], width: 2 }; const arcGraphic = new Graphic({ geometry: new Polyline({ paths: [[elevatedPathCoords[0]]], hasZ: true, spatialReference: startPoint.spatialReference }), symbol: arcSymbol }); animationLayer.addMany([arcGraphic, pulseGraphic]); let startTime = null; let animationFrameId; function animationStep(timestamp) { if (startTime === null) { startTime = timestamp; } const elapsed = timestamp - startTime; const progress = Math.min(elapsed / duration, 1); const currentStep = Math.floor(progress * totalSteps); if (currentStep >= elevatedPathCoords.length) return; pulseGraphic.geometry = new Point({ longitude: elevatedPathCoords[currentStep][0], latitude: elevatedPathCoords[currentStep][1], z: elevatedPathCoords[currentStep][2], spatialReference: startPoint.spatialReference }); arcGraphic.geometry = new Polyline({ paths: [elevatedPathCoords.slice(0, currentStep + 1)], hasZ: true, spatialReference: startPoint.spatialReference }); const pulseSizeFactor = 1 + Math.sin(elapsed / 200) * 0.3; const clonedSymbol = pulseGraphic.symbol.clone(); clonedSymbol.size = 10 * pulseSizeFactor; pulseGraphic.symbol = clonedSymbol; if (progress < 1) { animationFrameId = requestAnimationFrame(animationStep); } else { pulseGraphic.geometry = new Point({ longitude: endPoint.longitude, latitude: endPoint.latitude, z: 0, spatialReference: startPoint.spatialReference }); arcGraphic.geometry = elevatedPathLine; isAnimating = false; resolve(); } } animationFrameId = requestAnimationFrame(animationStep); }); }
-
-            // --- Control Functions ---
-            function handleGoToError(error) { if (error.name !== "AbortError") { console.error("Error during goTo/animation:", error); isAnimating = false; endSetCenterPointMode(); /* Reset mode on error */ } }
-
-            // goToFeature (No changes needed)
-            async function goToFeature(index, previousIndex = -1) { if (index < 0 || index >= sortedFeatures.length || !appState.activeView || isAnimating || isSettingCenter) { return; } let animStartIndex = previousIndex; if (animStartIndex < 0 || animStartIndex >= sortedFeatures.length) { animStartIndex = currentIndex; } const is3D = appState.activeView.type === '3d'; const shouldAnimate = (index !== animStartIndex) && is3D; const targetIndex = index; const endFeature = sortedFeatures[targetIndex]; const startFeature = (shouldAnimate || previousIndex !== -1) ? sortedFeatures[animStartIndex] : null; currentIndex = targetIndex; appState.activeView.closePopup(); hideAllConnections(); try { if (startFeature && endFeature && startFeature !== endFeature) { await appState.activeView.goTo({ target: [startFeature, endFeature] }, { duration: PRE_ANIM_ZOOM_DURATION }); } if (shouldAnimate && startFeature) { await animateArc(startFeature, endFeature); } const targetOptions = { target: endFeature.geometry, zoom: is3D ? 10 : 16 }; if (is3D) { targetOptions.tilt = 45; } await appState.activeView.goTo(targetOptions, { duration: 0 }); appState.activeView.openPopup({ features: [endFeature], location: endFeature.geometry }); } catch (error) { handleGoToError(error); } }
-
-            // --- Playback Logic --- (No changes needed)
-            function stopPlayback() { if (isPlaying) { clearTimeout(playTimeout); playTimeout = null; isPlaying = false; playBtn.textContent = "播放"; console.log("Playback stopped."); } }
-            function startPlayback() { if (isPlaying || sortedFeatures.length === 0 || !appState.activeView || isAnimating || isSettingCenter) return; isPlaying = true; playBtn.textContent = "暂停"; console.log("Playback started."); scheduleNextPlaybackStep(); }
-            function scheduleNextPlaybackStep() { if (!isPlaying || isAnimating) return; const previousPlaybackIndex = currentIndex; let nextPlaybackIndex = currentIndex + 1; if (nextPlaybackIndex >= sortedFeatures.length) { nextPlaybackIndex = 0; } goToFeature(nextPlaybackIndex, previousPlaybackIndex).then(() => { if (isPlaying) { playTimeout = setTimeout(() => { if (isPlaying) { scheduleNextPlaybackStep(); } }, POPUP_DELAY); } }).catch(handleGoToError); }
-
-            // --- Connections --- (No changes needed)
-            function showAllConnections() { if (!appState.activeView || sortedFeatures.length < 2) return; connectionsLayer.removeAll(); console.log("Drawing all connections"); const connectionSymbol = { type: "simple-line", color: [0, 255, 255, 0.4], width: 1.5 }; const graphics = []; for (let i = 0; i < sortedFeatures.length - 1; i++) { const start = sortedFeatures[i].geometry; const end = sortedFeatures[i + 1].geometry; if (start && end) { try { const line = geometryEngine.geodesicDensify(new Polyline({ paths: [[[start.longitude, start.latitude], [end.longitude, end.latitude]]], spatialReference: start.spatialReference }), 100000, "meters"); if (line) { graphics.push(new Graphic({ geometry: line, symbol: connectionSymbol })); } } catch(lineError){ console.warn("Could not create connection line between index", i, "and", i+1, lineError); } } } connectionsLayer.addMany(graphics); connectionsLayer.visible = true; }
-            function hideAllConnections() { if (connectionsLayer) { connectionsLayer.visible = false; } }
-
-            // --- View Switching --- (No changes needed)
-            function switchView() { if (isSettingCenter) return; stopPlayback(); hideAllConnections(); const is3D = appState.activeView.type === "3d"; const activeViewpoint = appState.activeView.viewpoint.clone(); appState.activeView.closePopup(); appState.activeView.container = null; if (is3D) { appState.mapView.viewpoint = activeViewpoint; appState.mapView.container = appState.container; appState.activeView = appState.mapView; allBtn.textContent = "3D 地球"; if (sortedFeatures.length > 0) { appState.activeView.goTo(sortedFeatures).catch(handleGoToError); } } else { appState.sceneView.viewpoint = activeViewpoint; appState.sceneView.container = appState.container; appState.activeView = appState.sceneView; allBtn.textContent = "2D 地图"; } }
-
-            // --- Theme Switching Function --- (No changes needed)
-            function switchTheme() { const newTheme = (currentTheme === 'light') ? 'dark' : 'light'; const lightCSS = 'https://js.arcgis.com/4.29/esri/themes/light/main.css'; const darkCSS = 'https://js.arcgis.com/4.29/esri/themes/dark/main.css'; map.basemap = Basemap.fromId(newTheme === 'dark' ? "dark-gray-vector" : "satellite"); document.body.classList.replace(currentTheme + '-theme', newTheme + '-theme'); themeLink.href = (newTheme === 'dark' ? darkCSS : lightCSS); currentTheme = newTheme; if(csvLayer?.renderer) { let newRenderer = csvLayer.renderer.clone(); if (newTheme === 'dark') { newRenderer.symbol.color = [255, 150, 50, 0.9]; newRenderer.symbol.outline.color = [0, 0, 0, 0.7]; } else { newRenderer.symbol.color = [255, 100, 0, 0.8]; newRenderer.symbol.outline.color = [255, 255, 255, 0.7]; } csvLayer.renderer = newRenderer; } console.log("Theme switched to:", newTheme); }
-
-            // --- Setup Settings Panel --- (No changes needed)
-            function setupSettingsPanel() { speedValueSpan.textContent = speedSlider.value; popupValueSpan.textContent = popupSlider.value; altitudeValueSpan.textContent = altitudeSlider.value; const mapSpeedToDuration = (speed) => Math.max(500, 3500 - (speed * 300)); ANIMATION_DURATION = mapSpeedToDuration(parseInt(speedSlider.value, 10)); speedSlider.addEventListener('input', () => { const speed = parseInt(speedSlider.value, 10); speedValueSpan.textContent = speed; ANIMATION_DURATION = mapSpeedToDuration(speed); console.log("Animation Duration set to:", ANIMATION_DURATION); }); popupSlider.addEventListener('input', () => { const seconds = parseInt(popupSlider.value, 10); popupValueSpan.textContent = seconds; POPUP_DELAY = seconds * 1000; console.log("Popup Delay set to:", POPUP_DELAY); }); altitudeSlider.addEventListener('input', () => { const altitudeKm = parseInt(altitudeSlider.value, 10); altitudeValueSpan.textContent = altitudeKm; MAX_ARC_HEIGHT = altitudeKm * 1000; console.log("Max Arc Height set to:", MAX_ARC_HEIGHT); }); }
-
-            // --- Center Point Setting Functions (NEW) ---
-            async function startSetCenterPointMode() {
-                if (isSettingCenter || isAnimating) return;
-
-                // If not in 3D, switch first
-                if (appState.activeView.type !== '3d') {
-                    console.log("Switching to 3D view to set center point...");
-                    switchView();
-                    // Give the view a moment to switch (optional but safer)
-                    await new Promise(resolve => setTimeout(resolve, 150));
-                    if (appState.activeView.type !== '3d') {
-                        console.error("Failed to switch to 3D view for setting center.");
-                        return;
-                    }
-                }
-
-                console.log("Starting center point selection mode.");
-                isSettingCenter = true;
-                centerPointFeedback.style.display = 'block'; // Show feedback
-                appState.activeView.cursor = 'crosshair'; // Change cursor
-                settingsPanel.style.display = 'none'; // Hide settings panel
-
-                // Remove previous listener if any exists (safety)
-                if (centerPointClickHandle) {
-                    centerPointClickHandle.remove();
-                    centerPointClickHandle = null;
-                }
-
-                // Add a one-time click listener to the SceneView
-                centerPointClickHandle = appState.sceneView.on('click', handleCenterPointSet);
-            }
-
-            function handleCenterPointSet(event) {
-                if (!isSettingCenter || !event.mapPoint) return; // Ignore if not in mode or no mapPoint
-
-                // Store the clicked point (make sure it's a Point geometry)
-                if (event.mapPoint.type === "point") {
-                     customCenterPoint = event.mapPoint.clone();
-                     console.log(`New center point set: Long=${customCenterPoint.longitude.toFixed(4)}, Lat=${customCenterPoint.latitude.toFixed(4)}`);
-                     // Provide feedback
-                     centerPointFeedback.innerText = `中心点已更新! (${customCenterPoint.longitude.toFixed(2)}, ${customCenterPoint.latitude.toFixed(2)})`;
-                     centerPointFeedback.style.color = 'green';
-                     setTimeout(() => { // Reset feedback message after a delay
-                        centerPointFeedback.innerText = '请在3D地图上点击选择新的中心点...';
-                        centerPointFeedback.style.color = '#555'; // Reset color
-                        centerPointFeedback.style.display = 'none'; // Hide feedback
-                     }, 2500);
+            // Assuming we have an audio URL if not we can dynamically generate it
+            // For now, let's call the TTS generator if it doesn't exist
+            try {
+                const res = await fetch('/api/ai/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        filename: `temp_${Date.now()}.mp3`
+                    })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    audioEl.src = '/' + data.audio_url;
+                    audioEl.play();
                 } else {
-                    console.warn("Clicked geometry is not a point:", event.mapPoint.type);
+                    // if TTS fails, manually skip
+                    if (isPlaying) setTimeout(nextPoint, 3000);
                 }
-                endSetCenterPointMode(); // End selection mode
+            } catch (e) {
+                console.error("TTS Error", e);
+                if (isPlaying) setTimeout(nextPoint, 3000);
+            }
+        }
+
+        function focusPoint(idx, userInitiated = false) {
+            if (idx < 0 || idx >= points.length) return;
+
+            // handle audio interruption
+            audioEl.pause();
+
+            if (userInitiated && isPlaying) {
+                togglePlay(); // pause if user clicks manually
             }
 
-            function endSetCenterPointMode() {
-                if (!isSettingCenter) return;
-                console.log("Ending center point selection mode.");
-                isSettingCenter = false;
-                if (appState.activeView) {
-                    appState.activeView.cursor = 'default'; // Reset cursor
-                }
-                centerPointFeedback.style.display = 'none'; // Hide feedback
+            currentIndex = idx;
+            const p = points[idx];
 
-                // Remove the click listener
-                if (centerPointClickHandle) {
-                    centerPointClickHandle.remove();
-                    centerPointClickHandle = null;
-                }
+            // UI Updates
+            document.querySelectorAll('.point-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById(`point-item-${idx}`);
+            if (activeEl) {
+                activeEl.classList.add('active');
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
 
+            // Globe Camera Update
+            globe.controls().autoRotate = false;
+            globe.pointOfView({ lat: p.latitude, lng: p.longitude, altitude: 1.5 }, 1500);
 
-            // --- Event Listeners ---
-            // Main Controls
-            prevBtn.addEventListener('click', () => { if (isAnimating || isSettingCenter) return; stopPlayback(); const prevIndex = currentIndex; let newIndex = currentIndex - 1; if (newIndex < 0) { newIndex = sortedFeatures.length - 1; } goToFeature(newIndex, prevIndex); });
-            playBtn.addEventListener('click', () => { if (isAnimating || isSettingCenter) return; if (isPlaying) { stopPlayback(); } else { startPlayback(); } });
-            nextBtn.addEventListener('click', () => { if (isAnimating || isSettingCenter) return; stopPlayback(); const prevIndex = currentIndex; let newIndex = currentIndex + 1; if (newIndex >= sortedFeatures.length) { newIndex = 0; } goToFeature(newIndex, prevIndex); });
-            resetBtn.addEventListener('click', () => { if (isAnimating || isSettingCenter) return; stopPlayback(); const prevIndex = currentIndex; if (currentIndex !== 0) { goToFeature(0, prevIndex); } else { goToFeature(0, -1); } });
-            globalBtn.addEventListener('click', async () => {
-                if (isAnimating || isSettingCenter) return;
-                stopPlayback(); appState.activeView?.closePopup(); hideAllConnections();
-                if (appState.activeView.type !== "3d") {
-                    switchView(); await new Promise(resolve => setTimeout(resolve, 100));
-                }
-                if(appState.activeView.type === "3d") {
-                    const globalCenter = customCenterPoint ? [customCenterPoint.longitude, customCenterPoint.latitude] : [DEFAULT_CENTER_LON, DEFAULT_CENTER_LAT];
-                    const altitude = 35000000; // Keep altitude consistent for global view
-                    console.log("Going global, centering on:", globalCenter);
-                    try {
-                        await appState.activeView.goTo({
-                            position: [globalCenter[0], globalCenter[1] - 10, altitude], // Adjust lat slightly for framing
-                            tilt: 0, heading: 0
-                        }, { duration: 1500 });
-                        showAllConnections();
-                    } catch(error) { handleGoToError(error); }
-                }
-            });
-            allBtn.addEventListener('click', () => { if (!isAnimating && !isSettingCenter) switchView(); });
+            // Highlight specific arc
+            const activeArcs = (idx > 0) ? [arcs[idx - 1]] : [];
+            globe.arcsData(arcs).arcColor(d => activeArcs.includes(d) ? '#ec4899' : '#6366f1');
 
-            // Settings Panel Controls
-            settingsBtn.addEventListener('click', () => {
-                if (isSettingCenter) endSetCenterPointMode(); // Exit center setting if opening panel
-                settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
-                footprintsListPanel.style.display = 'none';
-            });
-            closeSettingsBtn.addEventListener('click', () => {
-                settingsPanel.style.display = 'none';
-                if (isSettingCenter) endSetCenterPointMode(); // Ensure mode ends if panel closed during selection
-            });
-            themeSubBtn.addEventListener('click', switchTheme);
-            setCenterBtn.addEventListener('click', startSetCenterPointMode); // Added
-            showListBtn.addEventListener('click', () => {
-                if (isSettingCenter) endSetCenterPointMode();
-                footprintsListPanel.style.display = 'block';
-                settingsPanel.style.display = 'none';
-            });
-
-            // List Panel Controls
-            closeListBtn.addEventListener('click', () => { footprintsListPanel.style.display = 'none'; });
-
-
-            // --- Disable/Enable Controls --- (Modified)
-            function disableControls(keepBasics = false) {
-                [prevBtn, playBtn, nextBtn, resetBtn, globalBtn, allBtn, settingsBtn].forEach(btn => btn.disabled = true);
-                // themeSubBtn inside settings also conceptually disabled if settingsBtn is
-                console.log("Controls disabled");
+            // Narrate if playing or user-initiated 
+            if (isPlaying || userInitiated) {
+                // If the point already has an audio_url from the DB, use it directly
+                // Wait, createdata sets audio_url to null. We rely on the endpoint to generate it instantly.
+                playTTS(`${p.location}。${p.content}`);
             }
-            function enableControls() {
-                if (isAnimating || isSettingCenter) return; // Keep disabled if busy
+        }
 
-                if (sortedFeatures.length > 0) {
-                     [prevBtn, playBtn, nextBtn, resetBtn, globalBtn, allBtn, settingsBtn].forEach(btn => btn.disabled = false);
-                    console.log("Controls enabled");
+        function nextPoint() {
+            if (currentIndex < points.length - 1) {
+                focusPoint(currentIndex + 1);
+            } else {
+                togglePlay(); // pause at end
+            }
+        }
+
+        function prevPoint() {
+            if (currentIndex > 0) {
+                focusPoint(currentIndex - 1);
+            }
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('btnPlay');
+            if (isPlaying) {
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+                btn.classList.add('active');
+                if (currentIndex === -1 || (currentIndex === points.length - 1)) {
+                    focusPoint(0); // restart from beginning
                 } else {
-                    console.warn("No features loaded, most controls remain disabled.");
-                     [prevBtn, playBtn, nextBtn, resetBtn].forEach(btn => btn.disabled = true); // Data-dependent buttons
-                     [globalBtn, allBtn, settingsBtn].forEach(btn => btn.disabled = false); // Allow global, switch, settings?
+                    focusPoint(currentIndex); // re-trigger audio for current
                 }
+            } else {
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+                btn.classList.remove('active');
+                audioEl.pause();
             }
+        }
 
-            // --- Start ---
-            initialize();
+        // Event Listeners
+        document.getElementById('btnPrev').onclick = () => { focusPoint(Math.max(0, currentIndex - 1), true); };
+        document.getElementById('btnNext').onclick = () => { focusPoint(Math.min(points.length - 1, currentIndex + 1), true); };
+        document.getElementById('btnPlay').onclick = () => { togglePlay(); };
+
+        const audioBtn = document.getElementById('btnAudioToggle');
+        audioBtn.onclick = () => {
+            autoAudio = !autoAudio;
+            if (autoAudio) {
+                audioBtn.classList.add('active');
+                audioBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            } else {
+                audioBtn.classList.remove('active');
+                audioBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                audioEl.pause();
+            }
+        };
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            globe.width(window.innerWidth).height(window.innerHeight);
         });
+
+        // Bootstrap
+        fetchJourney();
+
     </script>
+</body>
 
-
-</body></html>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoPlay | 名人足迹纪录片</title>
+    <script src="https://unpkg.com/three"></script>
+    <script src="https://unpkg.com/globe.gl"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050505;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+        }
+
+        #globeViz {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Title card overlay */
+        .title-card {
+            position: absolute;
+            z-index: 20;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .title-card.visible {
+            opacity: 1;
+        }
+
+        .title-card h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-card p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Story panel */
+        .story-panel {
+            position: absolute;
+            z-index: 15;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            max-width: 90vw;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.2rem;
+            padding: 28px 32px;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .story-panel.visible {
+            opacity: 1;
+        }
+
+        .story-panel .location {
+            color: #a855f7;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .story-panel .time {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .story-panel .content {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: absolute;
+            z-index: 20;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(to right, #6366f1, #ec4899);
+            transition: width 0.5s linear;
+        }
+
+        /* Bottom ticker */
+        .ticker {
+            position: absolute;
+            z-index: 20;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 10, 15, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2rem;
+            padding: 8px 24px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ticker .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #a855f7;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Controls */
+        .controls {
+            position: absolute;
+            z-index: 20;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .controls button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(20, 20, 28, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .controls button:hover {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        /* Back link */
+        .back-link {
+            position: absolute;
+            z-index: 20;
+            top: 24px;
+            left: 24px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="globeViz"></div>
+
+    <a href="index.html" class="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        Back
+    </a>
+
+    <div class="controls">
+        <button id="btnPause" title="暂停/播放">⏸</button>
+        <button id="btnSkip" title="下一位">⏭</button>
+        <button id="btnMute" title="静音">🔊</button>
+    </div>
+
+    <div class="title-card" id="titleCard">
+        <h1 id="titleName"></h1>
+        <p id="titleDesc"></p>
+    </div>
+
+    <div class="story-panel" id="storyPanel">
+        <div class="location" id="storyLocation"></div>
+        <div class="time" id="storyTime"></div>
+        <div class="content" id="storyContent"></div>
+    </div>
+
+    <div class="ticker" id="ticker">
+        <div class="dot"></div>
+        <span id="tickerText">Loading...</span>
+    </div>
+
+    <div class="progress-bar">
+        <div class="fill" id="progressFill"></div>
+    </div>
+
+    <audio id="ttsAudio" preload="auto"></audio>
+
+    <script>
+        (async function () {
+            // Globe setup
+            const globe = Globe()
+                (document.getElementById('globeViz'))
+                .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+                .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+                .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+                .showAtmosphere(true)
+                .atmosphereColor('#6366f1')
+                .atmosphereAltitude(0.25)
+                .pointColor(() => '#ff6b35')
+                .pointAltitude(0.02)
+                .pointRadius(0.4)
+                .arcColor(() => ['#6366f1', '#ec4899'])
+                .arcDashLength(0.4)
+                .arcDashGap(0.2)
+                .arcDashAnimateTime(1500)
+                .arcStroke(0.6);
+
+            globe.controls().autoRotate = true;
+            globe.controls().autoRotateSpeed = 0.3;
+            globe.controls().enableZoom = false;
+            globe.width(window.innerWidth).height(window.innerHeight);
+            window.addEventListener('resize', () => globe.width(window.innerWidth).height(window.innerHeight));
+
+            // Fetch all public journeys
+            const resp = await fetch('/api/featured-journeys?limit=200&offset=0');
+            const journeys = await resp.json();
+            if (!journeys.length) {
+                document.getElementById('tickerText').textContent = 'No journeys found';
+                return;
+            }
+
+            // State
+            let currentJourneyIdx = 0;
+            let currentPointIdx = 0;
+            let isPaused = false;
+            let isMuted = false;
+            let currentAudio = document.getElementById('ttsAudio');
+
+            const titleCard = document.getElementById('titleCard');
+            const storyPanel = document.getElementById('storyPanel');
+            const progressFill = document.getElementById('progressFill');
+
+            // Controls
+            document.getElementById('btnPause').addEventListener('click', () => {
+                isPaused = !isPaused;
+                document.getElementById('btnPause').textContent = isPaused ? '▶' : '⏸';
+                if (isPaused) currentAudio.pause();
+                else currentAudio.play().catch(() => { });
+            });
+            document.getElementById('btnSkip').addEventListener('click', () => {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                skipToNextJourney();
+            });
+            document.getElementById('btnMute').addEventListener('click', () => {
+                isMuted = !isMuted;
+                currentAudio.muted = isMuted;
+                document.getElementById('btnMute').textContent = isMuted ? '🔇' : '🔊';
+            });
+
+            async function fetchJourneyDetail(id) {
+                const r = await fetch(`/api/journeys/${id}`);
+                return r.json();
+            }
+
+            function sleep(ms) {
+                return new Promise(resolve => {
+                    const check = () => {
+                        if (isPaused) { setTimeout(check, 200); return; }
+                        resolve();
+                    };
+                    setTimeout(check, ms);
+                });
+            }
+
+            function showTitleCard(title, desc) {
+                document.getElementById('titleName').textContent = title;
+                document.getElementById('titleDesc').textContent = desc;
+                titleCard.classList.add('visible');
+                storyPanel.classList.remove('visible');
+            }
+
+            function hideTitleCard() {
+                titleCard.classList.remove('visible');
+            }
+
+            function showStory(location, time, content) {
+                document.getElementById('storyLocation').textContent = location;
+                document.getElementById('storyTime').textContent = time;
+                document.getElementById('storyContent').textContent = content;
+                storyPanel.classList.add('visible');
+            }
+
+            function hideStory() {
+                storyPanel.classList.remove('visible');
+            }
+
+            function flyTo(lat, lng, alt = 1.8, duration = 2000) {
+                globe.pointOfView({ lat, lng, altitude: alt }, duration);
+            }
+
+            // Calculate zoom level based on distance to next point
+            function getZoomAlt(point, nextPoint) {
+                if (!nextPoint) return 0.35;
+                const d = Math.sqrt(Math.pow(point.latitude - nextPoint.latitude, 2) + Math.pow(point.longitude - nextPoint.longitude, 2));
+                if (d < 5) return 0.25;   // Same region — very close
+                if (d < 20) return 0.35;  // Same country
+                if (d < 60) return 0.5;   // Same continent
+                return 0.7;               // Intercontinental
+            }
+
+            async function playPoint(point, nextPoint) {
+                // Dramatic fly-in: approach from high, then zoom into city
+                const zoomAlt = getZoomAlt(point, nextPoint);
+                flyTo(point.latitude, point.longitude, 1.8, 1500); // approach
+                await sleep(1200);
+                flyTo(point.latitude, point.longitude, zoomAlt, 2000); // zoom in close
+                await sleep(1800);
+
+                // Show story
+                showStory(point.location, point.time || '', point.content || '');
+
+                // Play TTS
+                if (point.audio_url && !isMuted) {
+                    currentAudio.src = '/' + point.audio_url;
+                    try {
+                        await currentAudio.play();
+                        // Wait for audio to finish
+                        await new Promise(resolve => {
+                            currentAudio.onended = resolve;
+                            currentAudio.onerror = resolve;
+                        });
+                    } catch (e) {
+                        await sleep(5000);
+                    }
+                } else {
+                    // No audio, wait based on content length
+                    const readTime = Math.max(4000, (point.content || '').length * 60);
+                    await sleep(readTime);
+                }
+
+                // Zoom back out before moving to next point
+                flyTo(point.latitude, point.longitude, 1.5, 1000);
+                await sleep(800);
+            }
+
+            async function playJourney(journeyMeta) {
+                const detail = await fetchJourneyDetail(journeyMeta.id);
+                if (!detail || !detail.points || !detail.points.length) return;
+
+                const totalPoints = detail.points.length;
+                document.getElementById('tickerText').textContent =
+                    `Now Playing: ${journeyMeta.title} (${currentJourneyIdx + 1}/${journeys.length})`;
+
+                // Show title card
+                showTitleCard(journeyMeta.title, journeyMeta.description || '');
+                flyTo(detail.points[0].latitude, detail.points[0].longitude, 2.5, 3000);
+                await sleep(4000);
+                hideTitleCard();
+
+                // Set globe data for this journey
+                const pointsData = detail.points.map(p => ({
+                    lat: p.latitude, lng: p.longitude, size: 0.4
+                }));
+                const arcsData = [];
+                for (let i = 0; i < detail.points.length - 1; i++) {
+                    arcsData.push({
+                        startLat: detail.points[i].latitude, startLng: detail.points[i].longitude,
+                        endLat: detail.points[i + 1].latitude, endLng: detail.points[i + 1].longitude
+                    });
+                }
+                globe.pointsData(pointsData).arcsData(arcsData);
+
+                // Play each point
+                for (let i = 0; i < totalPoints; i++) {
+                    if (isPaused) await sleep(0); // will block until unpaused
+                    currentPointIdx = i;
+                    progressFill.style.width = `${((i + 1) / totalPoints) * 100}%`;
+                    const nextPt = i < totalPoints - 1 ? detail.points[i + 1] : null;
+                    await playPoint(detail.points[i], nextPt);
+                }
+
+                hideStory();
+                await sleep(2000);
+            }
+
+            function skipToNextJourney() {
+                currentJourneyIdx = (currentJourneyIdx + 1) % journeys.length;
+                // The main loop will pick up the new index
+            }
+
+            // Main auto-play loop
+            async function autoPlayLoop() {
+                while (true) {
+                    const journey = journeys[currentJourneyIdx];
+                    await playJourney(journey);
+                    currentJourneyIdx = (currentJourneyIdx + 1) % journeys.length;
+                    progressFill.style.width = '0%';
+                    await sleep(1000);
+                }
+            }
+
+            // Start
+            autoPlayLoop();
+        })();
+    </script>
+</body>
+
+</html>

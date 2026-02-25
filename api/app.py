@@ -6,6 +6,8 @@ import os
 import datetime
 import hashlib
 import functools
+from api import ai_utils
+import asyncio
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": ["http://localhost", "http://127.0.0.1"]}})
@@ -406,12 +408,12 @@ def create_journey():
             for index, point in enumerate(points_data):
                  if 'location' in point and 'latitude' in point and 'longitude' in point:
                     conn.execute('''
-                        INSERT INTO journey_points (journey_id, location, time, exact_date, latitude, longitude, content, order_index, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        INSERT INTO journey_points (journey_id, location, time, exact_date, latitude, longitude, content, order_index, audio_url, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     ''', (
                         journey_id, point.get('location'), point.get('time'), point.get('date'),
                         point.get('latitude'), point.get('longitude'), point.get('content'),
-                        point.get('order_index', index)
+                        point.get('order_index', index), point.get('audio_url')
                     ))
         conn.commit()
 
@@ -476,12 +478,12 @@ def update_journey(journey_id):
             for index, point in enumerate(points_data):
                  if 'location' in point and 'latitude' in point and 'longitude' in point:
                     conn.execute('''
-                        INSERT INTO journey_points (journey_id, location, time, exact_date, latitude, longitude, content, order_index, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        INSERT INTO journey_points (journey_id, location, time, exact_date, latitude, longitude, content, order_index, audio_url, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     ''', (
                         journey_id, point.get('location'), point.get('time'), point.get('date'),
                         point.get('latitude'), point.get('longitude'), point.get('content'),
-                        point.get('order_index', index)
+                        point.get('order_index', index), point.get('audio_url')
                     ))
         conn.commit()
 
@@ -780,6 +782,38 @@ def submit_message():
         if conn: conn.rollback(); conn.close()
         return jsonify({"error": "An unexpected error occurred"}), 500
 
+
+
+@app.route('/api/ai/celebrity_footprint', methods=['POST'])
+@login_required
+def generate_celebrity_footprints():
+    data = request.json
+    name = data.get('name')
+    if not name:
+        return jsonify({"error": "Missing name"}), 400
+    
+    result = ai_utils.generate_celebrity_footprints(name)
+    if "error" in result:
+        return jsonify(result), 400
+        
+    return jsonify({"success": True, "data": result})
+
+@app.route('/api/ai/tts', methods=['POST'])
+@login_required
+def generate_tts():
+    data = request.json
+    text = data.get('text')
+    filename = data.get('filename')
+    
+    if not text or not filename:
+        return jsonify({"error": "Missing text or filename"}), 400
+    
+    try:
+        audio_url = asyncio.run(ai_utils.generate_tts_audio(text, filename))
+        return jsonify({"success": True, "audio_url": audio_url})
+    except Exception as e:
+        print(f"[ERROR] TTS generation failed: {e}")
+        return jsonify({"error": "TTS generation failed"}), 500
 
 if __name__ == '__main__':
     # ... (directory/db check code remains the same) ...

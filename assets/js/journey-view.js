@@ -324,7 +324,7 @@ function showNotification(message, type = 'info') {
 
 // --- Add API_BASE_URL ---
 // Make sure this matches where your Flask API is running
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = '/api';
 
 /**
  * 初始化地图

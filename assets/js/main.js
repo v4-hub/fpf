@@ -107,12 +107,7 @@ function createNotification(message, type = 'info', duration = 3000) {
  * 处理页面加载事件
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化AOS动画库
-    AOS.init({
-        once: true,
-        duration: 800,
-        easing: 'ease-in-out'
-    });
+    // 初始化各种功能（AOS已移除，使用CSS动画代替）
     
     // 初始化各种功能
     initDarkMode();
@@ -263,17 +258,17 @@ function loadFeaturedJourneys(isLoadMore = false) {
         currentJourneyOffset = 0;
     }
     
-    // 从JSON文件获取数据
-    fetch('data/featured-journeys.json')
-        .then(response => response.json())
-        .then(allData => {
+    // 从API获取数据
+    fetch(`/api/featured-journeys?limit=${journeysPerPage}&offset=${currentJourneyOffset}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
             // 隐藏加载提示
             journeyCardLoader.classList.add('hidden');
-            
-            // 应用分页逻辑
-            const start = currentJourneyOffset;
-            const end = currentJourneyOffset + journeysPerPage;
-            const data = allData.slice(start, end);
             
             if (data.length === 0) {
                 // 没有更多数据
@@ -295,8 +290,8 @@ function loadFeaturedJourneys(isLoadMore = false) {
             // 更新偏移量
             currentJourneyOffset += data.length;
             
-            // 如果没有更多数据，禁用加载更多按钮
-            if (currentJourneyOffset >= allData.length) {
+            // 如果返回的数据少于每页数量，说明没有更多了
+            if (data.length < journeysPerPage) {
                 const loadMoreBtn = document.getElementById('loadMoreJourneys');
                 if (loadMoreBtn) {
                     loadMoreBtn.textContent = "没有更多足迹";
@@ -323,56 +318,51 @@ function loadFeaturedJourneys(isLoadMore = false) {
  */
 function createJourneyCard(journey) {
     const card = document.createElement('div');
-    card.className = "bg-white dark:bg-gray-700 rounded-lg shadow-lg overflow-hidden map-card";
-    card.setAttribute('data-aos', 'fade-up');
+    card.className = "rounded-xl overflow-hidden shadow-lg border border-white/10 transition-transform duration-300 hover:-translate-y-2";
+    card.style.background = "rgba(20,20,28,0.7)";
+    card.style.backdropFilter = "blur(10px)";
     
-    // 设置封面背景（使用示例图片）
-    let backgroundImage = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=60';
+    // 设置封面背景（使用示例图片或上传的图片）
+    let backgroundImage = journey.cover_image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=60';
     
     // 根据足迹的第一个点生成描述
     let pointDescription = "";
     if (journey.first_point) {
-        pointDescription = `${journey.first_point.time} · ${journey.first_point.location}`;
+        pointDescription = `${journey.first_point.time || ''} · ${journey.first_point.location || ''}`;
     }
     
     // 卡片HTML
     card.innerHTML = `
-        <div class="h-48 bg-gray-300 dark:bg-gray-600 relative" style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center;">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+        <div class="h-48 bg-gray-800 relative" style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end">
                 <div class="p-4 w-full">
                     <h3 class="text-white font-bold text-xl">${journey.title}</h3>
-                    <p class="text-white/80 text-sm">${pointDescription}</p>
+                    <p class="text-white/70 text-sm">${pointDescription}</p>
                 </div>
             </div>
         </div>
         <div class="p-6">
-            <p class="text-gray-600 dark:text-gray-300 mb-4">${journey.description}</p>
+            <p class="text-gray-400 mb-4 text-sm leading-relaxed line-clamp-3">${journey.description || ''}</p>
             <div class="flex items-center">
-                <div class="rounded-full h-10 w-10 bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                    <span class="text-gray-600 dark:text-gray-300 font-bold">${journey.username.charAt(0).toUpperCase()}</span>
+                <div class="rounded-full h-10 w-10 bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center overflow-hidden">
+                    ${journey.avatar ? `<img src="${journey.avatar}" class="w-full h-full object-cover">` : 
+                    `<span class="text-indigo-300 font-bold">${(journey.username || 'U').charAt(0).toUpperCase()}</span>`}
                 </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">${journey.username}</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">浏览次数: ${journey.view_count}</p>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-white">${journey.username || 'Unknown'}</p>
+                    <p class="text-xs text-gray-500">浏览: ${journey.view_count || 0}</p>
                 </div>
             </div>
             <div class="mt-4 text-center">
-                <button class="view-journey-btn text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium flex items-center justify-center" data-journey-id="${journey.id}">
-                    查看足迹
-                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <a href="journey-view-3d.html?id=${journey.id}" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 font-medium text-sm transition-colors">
+                    探索3D足迹
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
-                </button>
+                </a>
             </div>
         </div>
     `;
-    
-    // 添加查看足迹点击事件
-    const viewBtn = card.querySelector('.view-journey-btn');
-    viewBtn.addEventListener('click', function() {
-        const journeyId = this.getAttribute('data-journey-id');
-        showJourneyDetail(journeyId);
-    });
     
     return card;
 }
@@ -385,100 +375,11 @@ function loadMoreJourneys() {
 }
 
 /**
- * 显示足迹详情
+ * 显示足迹详情 (已废弃，直接跳转到详情页)
  * @param {string} journeyId - 足迹ID
  */
 function showJourneyDetail(journeyId) {
-    // 显示模态框
-    const modal = document.getElementById('journeyDetailModal');
-    const contentDiv = document.getElementById('journeyDetailContent');
-    const titleElement = document.getElementById('journeyDetailTitle');
-    const viewFullBtn = document.getElementById('viewFullJourneyBtn');
-    
-    if (!modal || !contentDiv || !titleElement || !viewFullBtn) return;
-    
-    // 重置内容
-    contentDiv.innerHTML = `
-        <div class="loader mx-auto"></div>
-        <p class="text-center my-4 text-gray-500 dark:text-gray-400">加载中...</p>
-    `;
-    
-    // 显示模态框
-    modal.classList.remove('hidden');
-    
-    // 从JSON文件获取足迹详情
-    fetch('data/journey-details.json')
-        .then(response => response.json())
-        .then(allJourneys => {
-            // 查找对应ID的足迹
-            const journey = allJourneys[journeyId];
-            
-            if (!journey) {
-                throw new Error('未找到足迹数据');
-            }
-            
-            // 更新标题
-            titleElement.textContent = journey.title;
-            
-            // 构建足迹点时间线
-            let timelineHTML = `
-                <div class="mb-6">
-                    <p class="text-gray-600 dark:text-gray-300">${journey.description}</p>
-                    <div class="flex items-center mt-3">
-                        <div class="rounded-full h-8 w-8 bg-gray-300 dark:bg-gray-600 flex items-center justify-center mr-2">
-                            <span class="text-gray-600 dark:text-gray-300 font-bold">${journey.username.charAt(0).toUpperCase()}</span>
-                        </div>
-                        <span class="text-gray-700 dark:text-gray-300">${journey.username}</span>
-                    </div>
-                </div>
-                <div class="space-y-6 mt-6">
-            `;
-            
-            // 最多显示5个足迹点
-            const displayPoints = journey.points.slice(0, 5);
-            
-            displayPoints.forEach((point, index) => {
-                timelineHTML += `
-                    <div class="relative pl-8 pb-1">
-                        <div class="absolute left-0 top-0 rounded-full bg-indigo-500 w-4 h-4 mt-1"></div>
-                        ${index < displayPoints.length - 1 ? '<div class="absolute left-2 top-4 bottom-0 w-0.5 bg-indigo-200 dark:bg-indigo-900"></div>' : ''}
-                        <div>
-                            <h4 class="text-lg font-medium text-gray-900 dark:text-white">${point.location}</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">${point.time}</p>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">${point.content}</p>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            // 如果足迹点超过5个，显示查看更多提示
-            if (journey.points.length > 5) {
-                timelineHTML += `
-                    <div class="text-center pt-4">
-                        <p class="text-indigo-600 dark:text-indigo-400">以上仅显示前5个足迹点，共${journey.points.length}个足迹点</p>
-                    </div>
-                `;
-            }
-            
-            timelineHTML += '</div>';
-            
-            // 更新内容
-            contentDiv.innerHTML = timelineHTML;
-            
-            // 更新查看完整足迹按钮链接
-            viewFullBtn.href = `journey-view.html?id=${journeyId}`;
-        })
-        .catch(error => {
-            console.error('获取足迹详情失败:', error);
-            contentDiv.innerHTML = `
-                <div class="text-center py-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p class="text-red-500">加载失败，请稍后重试</p>
-                </div>
-            `;
-        });
+    window.location.href = `journey-view.html?id=${journeyId}`;
 }
 
 /**
@@ -505,19 +406,35 @@ function handleContactFormSubmit(e) {
         提交中...
     `;
     
-    // 模拟API请求
-    setTimeout(() => {
-        // 在实际环境中，这里应该调用API
-        console.log('留言数据:', { name, email, message });
-        
-        // 成功提示
-        statusDiv.classList.remove('hidden', 'bg-red-100', 'text-red-700');
-        statusDiv.classList.add('bg-green-100', 'text-green-700');
-        statusDiv.textContent = '留言发送成功！我们会尽快回复您。';
-        
-        // 重置表单
-        document.getElementById('contactForm').reset();
-        
+    // 调用API
+    fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, message })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 成功提示
+            statusDiv.classList.remove('hidden', 'bg-red-100', 'text-red-700');
+            statusDiv.classList.add('bg-green-100', 'text-green-700');
+            statusDiv.textContent = '留言发送成功！我们会尽快回复您。';
+            
+            // 重置表单
+            document.getElementById('contactForm').reset();
+        } else {
+             throw new Error(data.error || '提交失败');
+        }
+    })
+    .catch(error => {
+        console.error('留言提交失败:', error);
+        statusDiv.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+        statusDiv.classList.add('bg-red-100', 'text-red-700');
+        statusDiv.textContent = '发送失败，请稍后重试。';
+    })
+    .finally(() => {
         // 恢复提交按钮
         submitBtn.disabled = false;
         submitBtn.innerHTML = '发送留言';
@@ -526,7 +443,7 @@ function handleContactFormSubmit(e) {
         setTimeout(() => {
             statusDiv.classList.add('hidden');
         }, 5000);
-    }, 1500);
+    });
 }
 
 // 导出全局可访问的函数

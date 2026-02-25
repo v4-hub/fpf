@@ -6,7 +6,11 @@ import json
 import random
 
 # 创建数据库文件
-db_filename = 'footprint_map.db'
+data_dir = 'data'
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
+
+db_filename = os.path.join(data_dir, 'footprint_map.db')
 
 # 如果数据库文件已存在，先删除它
 if os.path.exists(db_filename):
@@ -59,6 +63,7 @@ CREATE TABLE journey_points (
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     content TEXT,
+    audio_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     order_index INTEGER,
@@ -149,8 +154,8 @@ rao_journey_points = [
 ]
 
 cursor.executemany('''
-INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, created_at, updated_at, order_index)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, audio_url, created_at, updated_at, order_index)
+VALUES (?, ?, ?, ?, ?, ?, ?, null, ?, ?, ?)
 ''', rao_journey_points)
 
 # 为其他用户添加一些示例足迹点
@@ -169,8 +174,8 @@ academic_journey_points = [
 ]
 
 cursor.executemany('''
-INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, created_at, updated_at, order_index)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, audio_url, created_at, updated_at, order_index)
+VALUES (?, ?, ?, ?, ?, ?, ?, null, ?, ?, ?)
 ''', academic_journey_points)
 
 # 添加毕业旅行足迹点
@@ -191,8 +196,8 @@ graduation_trip_points = [
 ]
 
 cursor.executemany('''
-INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, created_at, updated_at, order_index)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, audio_url, created_at, updated_at, order_index)
+VALUES (?, ?, ?, ?, ?, ?, ?, null, ?, ?, ?)
 ''', graduation_trip_points)
 
 # 添加环球旅行足迹点
@@ -219,8 +224,8 @@ global_trip_points = [
 ]
 
 cursor.executemany('''
-INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, created_at, updated_at, order_index)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, audio_url, created_at, updated_at, order_index)
+VALUES (?, ?, ?, ?, ?, ?, ?, null, ?, ?, ?)
 ''', global_trip_points)
 
 # 添加家族迁徙足迹点
@@ -241,8 +246,8 @@ family_migration_points = [
 ]
 
 cursor.executemany('''
-INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, created_at, updated_at, order_index)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO journey_points (journey_id, time, exact_date, location, latitude, longitude, content, audio_url, created_at, updated_at, order_index)
+VALUES (?, ?, ?, ?, ?, ?, ?, null, ?, ?, ?)
 ''', family_migration_points)
 
 # 添加用户设置

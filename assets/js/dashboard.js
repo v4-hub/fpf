@@ -11,7 +11,7 @@ let currentPagination = { page: 1, total_pages: 1 };
 let currentFilters = { search: '', sort: 'updated_at', visibility: 'all' };
 
 // --- API Base URL ---
-const API_BASE_URL = 'http://127.0.0.1:5000/api'; // Your Flask API base URL
+const API_BASE_URL = '/api'; // Your Flask API base URL
 
 // --- Helper Functions ---
 

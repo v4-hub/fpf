@@ -1,7 +1,7 @@
 // assets/js/journey-edit.js
 
 // --- Global State & Constants ---
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = '/api';
 let currentUser = null;
 let journeyData = null; // Holds full journey details { id, title, ..., points: [] }
 let pointsData = []; // Working array for points being edited

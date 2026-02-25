@@ -1,0 +1,6 @@
+Flask
+Flask-Cors
+wikipedia
+geopy
+edge-tts
+asyncio
