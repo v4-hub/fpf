@@ -28,7 +28,7 @@
 # =========================================================
 
 YOUTUBE_RTMP_URL="rtmp://a.rtmp.youtube.com/live2"
-YOUTUBE_STREAM_KEY="YOUR_STREAM_KEY_HERE"
+YOUTUBE_STREAM_KEY="y20z-s3e1-hb8t-3g0k-ast5"
 
 # Video settings
 FPS="30"
